@@ -1,13 +1,12 @@
-<html>
-<head>
-    <link type="text/css" rel="stylesheet" href="stylesheets/general_style.css" />
+{% extends "base.htm" %}
+{% block head}
 <style>
 
     .item {font-weight:bold;text-decoration:underline}
 </style>
-</head>
-<body>
-    <div class='main_panel'>
+{% endblock %}
+
+{% block main %}
     {% for event in events %}
     <p>
 			<span class='item'>{{event.who_name}}</span>
@@ -27,6 +26,4 @@
     {% endfor %}
     Display map
     <a href='/'>Back</a>
-    </div>
-</body>
-</html>
+{% endblock %}

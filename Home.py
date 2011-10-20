@@ -40,7 +40,7 @@ class Browse( webapp.RequestHandler ):
                               "FROM Event" )
         
         template_values = {'events':events}
-        path = os.path.join( os.path.dirname(__file__), 'browse_all.html' )
+        path = os.path.join( os.path.dirname(__file__), 'templates/browse_all.htm' )
         self.response.out.write( template.render( path, template_values ))
 
 def fixDate( str ):
