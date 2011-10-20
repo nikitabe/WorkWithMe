@@ -30,7 +30,7 @@ class Event(db.Model):
 class Home( webapp.RequestHandler ):
     def get( self ):
         template_values = {}
-        path = os.path.join( os.path.dirname(__file__), 'index.html' )
+        path = os.path.join( os.path.dirname(__file__), 'templates/index.htm' )
         # path = os.path.join( os.path.dirname(__file__), 'coming_soon.htm' )
         self.response.out.write( template.render( path, template_values ))
 
