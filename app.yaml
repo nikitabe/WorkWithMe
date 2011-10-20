@@ -1,0 +1,18 @@
+application: workwithme12
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /stylesheets
+  static_dir: stylesheets
+
+- url: /JS
+  static_dir: JS
+
+- url: /test
+  static_dir: test
+
+- url: /.*
+  script: Home.py
+

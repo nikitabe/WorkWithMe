@@ -1,0 +1,32 @@
+<html>
+<head>
+    <link type="text/css" rel="stylesheet" href="stylesheets/general_style.css" />
+<style>
+
+    .item {font-weight:bold;text-decoration:underline}
+</style>
+</head>
+<body>
+    <div class='main_panel'>
+    {% for event in events %}
+    <p>
+			<span class='item'>{{event.who_name}}</span>
+	        is working on 
+	        <span class='item'>{{event.what}}</span>
+	        at
+	        <span class='item'>{{event.whwhere}}</span>
+	        from 
+	        <span class='item'>{{event.when_start}}</span>
+	        to 
+	        <span class='item'>{{event.when_end}}</span>
+	        , who knows 
+	        <span class='item'>{{event.skill}}</span>
+	        and would like to sit next to
+	        <span class='item'>{{event.skill_neighbor}}</span>.
+	</p>
+    {% endfor %}
+    Display map
+    <a href='/'>Back</a>
+    </div>
+</body>
+</html>

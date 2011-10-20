@@ -1,0 +1,15 @@
+body {background:#232323; padding:60px; font-family:Arial;}
+.main_panel{ 
+    background: #fefefe; 
+    padding:30px;
+    color: #4e4e4e;
+    border:1px solid black;
+    font-size: 12px;}
+.statement input {
+    border-width: 0px 0px 1px 0px;
+    color:black;
+    font-size:14px;
+}
+.emphasize{
+    border-bottom: 1px dotted gray;
+}

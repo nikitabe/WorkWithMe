@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style type="text/css">
+            #map_canvas { height: 100px; width:100px; }
+            </style>
+        <script type="text/javascript"
+            src="http://maps.googleapis.com/maps/api/js?sensor=true">
+            </script>
+        <script type="text/javascript">
+            function initialize() {
+                var latlng = new google.maps.LatLng(-34.397, 150.644);
+                var myOptions = {
+                    zoom: 8,
+                    center: latlng,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                };
+                var map = new google.maps.Map(document.getElementById("map_canvas"),
+                                              myOptions);
+            }
+            
+            </script>
+    </head>
+    <body onload="initialize_map()">
+        <div id="map_canvas" ></div>
+    </body>
+</html>
