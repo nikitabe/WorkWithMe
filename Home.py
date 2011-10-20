@@ -52,7 +52,7 @@ def fixDate( str ):
 class Add_event( webapp.RequestHandler ):
     def get( self ):
         template_values = {}
-        path = os.path.join( os.path.dirname(__file__), 'add_event.html' )
+        path = os.path.join( os.path.dirname(__file__), 'templates/add_event.htm' )
         self.response.out.write( template.render( path, template_values ))
     def post( self ):
         event = Event()
