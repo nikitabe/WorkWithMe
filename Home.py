@@ -87,7 +87,9 @@ class ComingSoon( webapp.RequestHandler ):
 
 def main():
     application = webapp.WSGIApplication(
-                                     [('/', ComingSoon ),
+                                     [
+									  ('/', Home ),
+									  # ('/', ComingSoon ),
                                       ('/browse', Browse ),
                                       ('/add', Add_event ),
 									  ('/home', Home )
