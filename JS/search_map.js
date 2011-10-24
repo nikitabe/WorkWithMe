@@ -6,7 +6,8 @@ var map,
     defaultArea = 5000,
     markersList = [],
     placesList = [],
-    defaultTypes = 'store gym food cafe bar street_address point_of_interest administrative_area_level_1 administrative_area_level_2 administrative_area_level_3 colloquial_area country floor intersection locality natural_feature neighborhood political point_of_interest post_box postal_code postal_code_prefix postal_town premise room route street_address street_number sublocality sublocality_level_4 sublocality_level_5 sublocality_level_3 sublocality_level_2 sublocality_level_1 subpremise transit_station'.split(" ");
+    defaultTypes = 'store gym food cafe bar street_address point_of_interest administrative_area_level_1 administrative_area_level_2 administrative_area_level_3 colloquial_area country floor intersection locality natural_feature neighborhood political point_of_interest post_box postal_code postal_code_prefix postal_town premise room route street_address street_number sublocality sublocality_level_4 sublocality_level_5 sublocality_level_3 sublocality_level_2 sublocality_level_1 subpremise transit_station'.split(" "),
+	default_zoom = 15;
 
 
 function init_map_stuff () {
@@ -15,7 +16,7 @@ function init_map_stuff () {
     map = new google.maps.Map(document.getElementById('map_canvas'), {
             mapTypeId: google.maps.MapTypeId.ROADMAP,
             center: pi0,
-            zoom: 15
+            zoom: default_zoom
         });
     infowindow = new google.maps.InfoWindow();
     geocoder = new google.maps.Geocoder();
@@ -30,6 +31,11 @@ function init_btn_act() {
     $("#searchBtn").click( function () {
         searchFnc();
     });
+	$("#where").keydown( function(event){
+		if (event.keyCode == '13') {
+			searchFnc();
+		}
+	});
 }
 function searchFnc() {
     var sTxt = $("#where").val();
@@ -85,11 +91,11 @@ function procSearchResponse(r,s) {
                                         map: map,
                                         position: results[j].geometry.location
                                 });
+
                                 markersList.push({marker:marker, place: results[j]});
-                                google.maps.event.addListener(marker, 'click', function() {
-                                    infowindow.setContent(addr || "aici");
+                                google.maps.event.addListener(marker, 'click', function( marker ) {
+                                    infowindow.setContent( addr || "aici" + pickMeStr( marker.getPosition().lat(), marker.getPosition().lng() ) );
                                     infowindow.open(map, this);
-                            
                                 });
                                 pStore += "<li><a href='#"+addr+"' onclick=\"showOnlyPlace('"+j+"');\">"+addr+"</a></li>";
                                 dBounds.extend(results[j].geometry.location);
@@ -105,6 +111,12 @@ function procSearchResponse(r,s) {
         });
     }
 }
+
+function pickMeStr( lat, lng )
+{
+	return " <div class='btn' onclick=\"setMyPositionTo(" + lat + "," + lng + ")\">I am here</div>";
+}
+
 function createMarker(p) {
     var placeLoc = p.geometry.location;
     var marker = new google.maps.Marker({
@@ -114,10 +126,11 @@ function createMarker(p) {
     markersList.push({marker: marker, place: p} );     
     google.maps.event.addListener(marker, 'click', 
             function() {
-                infowindow.setContent(p.types[0] + ": " +p.name + ", " + p.vicinity);
+                infowindow.setContent(p.types[0] + ": " +p.name + ", " + p.vicinity + pickMeStr( placeLoc.lat(), placeLoc.lng() ) );
                 infowindow.open(map, this);
             });
 }
+
 function cleanMarkerList() {
     for(var i=0;i<markersList.length;i++) {
         markersList[i].marker.setMap(null);
@@ -125,12 +138,16 @@ function cleanMarkerList() {
     if (myLoc && myLoc.setMap) {
         myLoc.setMap(null);
     }
+	$("#loc_geopt_lat").val( "" );  
+    $("#loc_geopt_lng").val( "" );
 }
 
 function showOnlyPlace(pid) {
     var marker = markersList[pid].marker;
     var p = markersList[pid].place;  
-    infowindow.setContent(p.formatted_address || p.types[0] + ": " +p.name + ", " + p.vicinity);
+	var lat = marker.position.lat()
+	var lng = marker.position.lng()
+    infowindow.setContent(p.formatted_address || p.types[0] + ": " +p.name + ", " + p.vicinity );
     infowindow.open(map, marker);
     map.panTo(p.geometry.location);
     return false;
@@ -148,9 +165,19 @@ function findMeFnc() {
     }
 
 }
+
+function setMyPositionTo( lat, lng )
+{
+	$("#loc_geopt_lat").val( lat );  
+    $("#loc_geopt_lng").val( lng );	
+}
+
 function locFound(pos) {
     var lat = pos.coords.latitude;
     var lng = pos.coords.longitude;
+
+	setMyPositionTo( lat, lng );
+
     var mM = myLoc = new google.maps.LatLng(lat,lng);
     var marker = new google.maps.Marker({
                 map: map,
@@ -163,7 +190,7 @@ function locFound(pos) {
                 infowindow.open(map, marker);
             });
     map.setCenter(mM);
-    map.setZoom(16);
+    map.setZoom(default_zoom);
 }
 function locNoFound() { 
     $("#searchResults").html("<h3>Your browser does not support geolocation</h3>");
