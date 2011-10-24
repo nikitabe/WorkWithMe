@@ -1,2 +1,7 @@
 Workflows:
 
+- come to page
+- identify where you are, what you are working on, etc.
+- log in (?)
+- 
+

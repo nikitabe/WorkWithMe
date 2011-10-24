@@ -15,40 +15,50 @@
     <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places&sensor=false"></script>
     <script type="text/javascript" src="http://code.google.com/apis/gears/gears_init.js"></script>
 	<script type="text/javascript" src="/JS/add_event.js"></script>
-    
+	<script type="text/javascript" src="/JS/search_map.js"></script>
+    <script type="text/javascript">
+	$(function () {
+		init_map_stuff();
+		init_add_event();
+	});
+
+	</script>
 {% endblock %}
 
 {% block main %}
-<form action="/add" method="post">
     <div class="statement">
         Hi.  My <span class='emphasize'>name</span> is 
-        <input type="text" name="who_name"></input>.<br/>
+        <input type="text" id="who_name" name="who_name"></input>.<br/>
         I'll be at 
-        <input type="text" id="where" name="where" value="where?"></input>
+        <input type="text" id="where" name="where" value="where?" />
         <div id="map_success"   style="display:none;color:white;padding:10px;background-color:green;">hello</div>
         <div id="map_error"     style="display:none;color:white;padding:10px;background-color:red;">hello</div>
-        <!--<input type="button" value="Encode" onclick="codeAddress()">-->
+
+		<input type="button" name="searchBtn" id="searchBtn" value="Search" />
+        <input type="button" name="findMeBtn" id="findMeBtn" value="Find Me" />
+        <div id="searchResults"></div>
         <div id="map_canvas" ></div>
-        where I'll be
-        <input type="text" name="what" value="working on what?"></input>.
+
+        where I'll be
+        <input type="text" id="what" name="what" value="working on what?"></input>.
         I'll be there from
-        <input type="text" name="when_start" ></input>
+        <input type="text" id="when_start" name="when_start" ></input>
         to 
-        <input type="text" name="when_end" ></input>
+        <input type="text" id="when_end" name="when_end" ></input>
         .<br/>
         I <span class='emphasize'>know</span> 
-        <input type="text" name="skill"></input>
+        <input type="text" id="skill"vname="skill"></input>
         .<br/>
         I'd like to <span class='emphasize'>sit next to</span>
-        <input type="text" name="skill_neighbor"></input>.
+        <input type="text" id="skill_neighbor" name="skill_neighbor"></input>.
 
             <input type="hidden" id="loc_geopt_lat" name="loc_geopt_lat"></input>
             <input type="hidden" id="loc_geopt_lng" name="loc_geopt_lng"></input>
     </div>
     <div>
-        <input type="submit" value="Add"/>
+        <input type="submit" id="do_submit" value="Add"/>
     </div>
-</form>
+	<div id="out_str" />
 
     <a href='/'>Back</a>
 {% endblock %}

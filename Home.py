@@ -73,7 +73,8 @@ class Add_event( webapp.RequestHandler ):
             event.where_loc_lng   = self.request.get( 'loc_geopt_lng' )
 
         event.put()
-        self.redirect( 'browse')
+        self.response.out.write( self.request.get('Event Added') )
+        
         # Add the information that was submitted
         
             
