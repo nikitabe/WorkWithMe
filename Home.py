@@ -77,7 +77,9 @@ class Add_event( webapp.RequestHandler ):
         
         # Add the information that was submitted
         
-            
+class ComingSoon( webapp.RequestHandler ):
+	def get( self ):
+		 self.redirect( 'http://soon.workwithme.org')          
         
 
 
@@ -85,9 +87,10 @@ class Add_event( webapp.RequestHandler ):
 
 def main():
     application = webapp.WSGIApplication(
-                                     [('/', Home ),
+                                     [('/', ComingSoon ),
                                       ('/browse', Browse ),
-                                      ('/add', Add_event )
+                                      ('/add', Add_event ),
+									  ('/home', Home )
                                       ], debug=True )
     util.run_wsgi_app( application )
 
