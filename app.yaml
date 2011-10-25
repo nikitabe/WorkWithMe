@@ -10,6 +10,9 @@ handlers:
 - url: /JS
   static_dir: JS
 
+- url: /images
+  static_dir: images
+
 - url: /test
   static_dir: test
 

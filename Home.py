@@ -96,7 +96,7 @@ def main():
     application = webapp.WSGIApplication( 
                                      [
 									  ('/', Home ),
-									  # ('/', ComingSoon ),
+									  #('/', ComingSoon ),
                                       ('/browse', Browse ),
                                       ('/add', Add_event ),
 									  ('/home', Home )

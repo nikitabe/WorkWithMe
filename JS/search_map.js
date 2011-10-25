@@ -3,6 +3,7 @@ var map,
     placeApi,
     infowindow,
     myLoc,
+	myLocMarker,
     defaultArea = 1000,
     markersList = [],
     placesList = [],
@@ -132,6 +133,13 @@ function createMarker(p) {
             });
 }
 
+function clearMyLocMarker(){
+	if( myLocMarker ){
+		myLocMarker.setMap( null );
+		myLocMarker = 0;
+	}
+}
+
 function cleanMarkerList() {
     for(var i=0;i<markersList.length;i++) {
         markersList[i].marker.setMap(null);
@@ -155,7 +163,7 @@ function showOnlyPlace(pid) {
 }
 
 function findMeFnc() {
-    cleanMarkerList();
+	clearMyLocMarker();
     if (navigator &&
             (ng = navigator.geolocation) &&
             ng.getCurrentPosition) {
@@ -176,21 +184,25 @@ function setMyPositionTo( lat, lng, where_name, where_addr )
 }
 
 function locFound(pos) {
+
     var lat = pos.coords.latitude;
     var lng = pos.coords.longitude;
 
 	setMyPositionTo( lat, lng, "Not set", "Not Set" );
 
     var mM = myLoc = new google.maps.LatLng(lat,lng);
-    var marker = new google.maps.Marker({
-                map: map,
-                position: mM
+    myLocMarker = new google.maps.Marker({
+		map: map,
+		position: mM,
+		animation: google.maps.Animation.DROP,
+		icon: '/images/markers/blue_MarkerA.png'
     });
-    markersList.push({marker: marker, place: $("#where").text()});
-    google.maps.event.addListener(marker, 'click',
+//    markersList.push({
+//		marker: marker, place: $("#where").text()});
+    google.maps.event.addListener(myLocMarker, 'click',
             function() {
                 infowindow.setContent($("#where").text());
-                infowindow.open(map, marker);
+                infowindow.open(map, myLocMarker);
             });
     map.setCenter(mM);
     map.setZoom(default_zoom);
