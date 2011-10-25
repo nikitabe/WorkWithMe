@@ -9,7 +9,7 @@ var map,
     markersList = [],
     placesList = [],
     defaultTypes = 'store gym food cafe bar street_address point_of_interest administrative_area_level_1 administrative_area_level_2 administrative_area_level_3 colloquial_area country floor intersection locality natural_feature neighborhood political point_of_interest post_box postal_code postal_code_prefix postal_town premise room route street_address street_number sublocality sublocality_level_4 sublocality_level_5 sublocality_level_3 sublocality_level_2 sublocality_level_1 subpremise transit_station'.split(" "),
-	map_fields = 'loc_geopt_lat loc_geopt_lng where_name where_addr where_quick_name where_detail'.split(" "),
+	map_fields = 'loc_geopt_lat loc_geopt_lng where_name where_addr where_detail'.split(" "),
 	default_zoom = 15;
 
 
@@ -76,7 +76,7 @@ function procSearchResponse(r,s) {
             var pVicinity = r[i].vicinity;
             var address = pName + " " + pVicinity;
             var extAddress = pType +": "+ address;
-            pStore += "<li><a href='#"+address+"' onclick=\"showOnlyPlace('"+i+"');\">"+extAddress+"</a></li>";
+            pStore += "<li>" + pickMeStr( place.geometry.location.lat(), place.geometry.location.lng(), pName, address ) + "<a href='#"+address+"' onclick=\"showOnlyPlace('"+i+"');\">"+extAddress+"</a></li>";
             dBounds.extend(place.geometry.location);
 
         }
@@ -98,10 +98,10 @@ function procSearchResponse(r,s) {
 
                                 markersList.push({marker:marker, place: results[j]});
                                 google.maps.event.addListener(marker, 'click', function( marker ) {
-                                    infowindow.setContent( addr + pickMeStr( marker.getPosition().lat(), marker.getPosition().lng(), "", addr ) );
+                                    infowindow.setContent( addr + pickMeStr( marker.getPosition().lat(), marker.getPosition().lng(), "Name of Location", addr ) );
                                     infowindow.open(map, this);
                                 });
-                                pStore += "<li><a href='#"+addr+"' onclick=\"showOnlyPlace('"+j+"');\">"+addr+"</a></li>";
+                                pStore += "<li>" + pickMeStr( marker.getPosition().lat(), marker.getPosition().lng(), "", addr ) + "<a href='#"+addr+"' onclick=\"showOnlyPlace('"+j+"');\">"+addr+"</a></li>";
                                 dBounds.extend(results[j].geometry.location);
 
                             })(results, j); //end fnc
@@ -130,7 +130,7 @@ function createMarker(p) {
     markersList.push({marker: marker, place: p} );     
     google.maps.event.addListener(marker, 'click', 
             function() {
-                infowindow.setContent(p.types[0] + ": " +p.name + ", " + p.vicinity + pickMeStr( placeLoc.lat(), placeLoc.lng(), p.name, p.address ) );
+                infowindow.setContent(p.types[0] + ": " +p.name + ", " + p.vicinity + pickMeStr( placeLoc.lat(), placeLoc.lng(), p.name, p.vicinity ) );
                 infowindow.open(map, this);
             });
 }

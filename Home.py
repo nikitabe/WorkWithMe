@@ -24,7 +24,6 @@ class Event(db.Model):
 	where_loc       = db.GeoPtProperty()
 	where_loc_lat   = db.FloatProperty()
 	where_loc_lng   = db.FloatProperty()
-	where_quick_name = db.StringProperty(multiline=False)
 	where_name		= db.StringProperty(multiline=False)
 	where_addr		= db.StringProperty(multiline=True)
 	where_detail 	= db.StringProperty(multiline=True)
@@ -66,7 +65,6 @@ class Add_event( webapp.RequestHandler ):
 		event.skill         = self.request.get('skill' )
 		event.skill_neighbor  = self.request.get('skill_neighbor' )
 
-		event.where_quick_name = self.request.get('where_quick_name')
 		event.where_name    = self.request.get('where_name')
 		event.where_addr    = self.request.get('where_addr')
 		event.where_detail  = self.request.get('where_detail')

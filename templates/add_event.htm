@@ -39,6 +39,7 @@
 		$('#btn_map_cancel').click( function(){
 			$('#map-overlay').modal( 'hide' );
 		});
+		
 	});
 
 	</script>
@@ -63,13 +64,14 @@
 		        <button class="btn" name="findMeBtn" id="findMeBtn" value="Find Me">Find Me!</button>
 		        <div id="searchResults"></div>
 		        <div id="map_canvas" ></div>
-		
-		        <input type="text" id="new_where_quick_name" name="new_where_quick_name" value="nickname" />
+				
 		        <input type="text" id="new_where_name" name="new_where_name" value="name of the place" />
-		        <input type="text" id="new_where_addr" name="new_where_addr" value="address" />
-		        <input type="text" id="new_where_detail" name="new_where_detail" value="add a comment?" />
-				<input type1="hidden" id="new_loc_geopt_lat" name="new_loc_geopt_lat"></input>
-				<input type1="hidden" id="new_loc_geopt_lng" name="new_loc_geopt_lng"></input>
+		        <br/>
+				<input type="text" id="new_where_addr" name="new_where_addr" value="address"  />
+		        <br/>
+				<input type="text" id="new_where_detail" name="new_where_detail" value="add a comment?" />
+				<input type="hidden" id="new_loc_geopt_lat" name="new_loc_geopt_lat"></input>
+				<input type="hidden" id="new_loc_geopt_lng" name="new_loc_geopt_lng"></input>
 				
             </div>
             <div class="modal-footer">
@@ -84,17 +86,16 @@
     <input type="text" id="who_name" name="who_name"></input>.<br/>
     <hr/>I'll be at 
 
-    <input type="text" id="where_quick_name" name="where_quick_name" value="nickname" />
-    <input type="text" id="where_name" name="where_name" value="name of the place" />
-    <input type="text" id="where_addr" name="where_addr" value="address" />
-    <input type="text" id="where_detail" name="where_detail" value="add a comment?" />
-	<input type1="hidden" id="loc_geopt_lat" name="loc_geopt_lat"></input>
-	<input type1="hidden" id="loc_geopt_lng" name="loc_geopt_lng"></input>
+	<button data-controls-modal="map-overlay" data-backdrop="true" data-keyboard="true" class="btn">Find Location</button>
+	<div>
+		<input type="text" id="where_name" name="where_name" value="name of the place" readonly />
+    	<br/>
+		<input type="text" id="where_addr" name="where_addr" value="address" readonly/>
+	</div>
+    <br/><input type="text" id="where_detail" name="where_detail" value="Are you stuck between the piano and the barista?" />
+	<input type="hidden" id="loc_geopt_lat" name="loc_geopt_lat"></input>
+	<input type="hidden" id="loc_geopt_lng" name="loc_geopt_lng"></input>
 
-	<div id="location_name">Location Not Set</div>
-
-
-	<button data-controls-modal="map-overlay" data-backdrop="true" data-keyboard="true" class="btn danger">Set Location</button>
 	<hr/>
     I'll be
     <input type="text" id="what" name="what" value="working on what?"></input>.
