@@ -4,10 +4,12 @@ var map,
     infowindow,
     myLoc,
 	myLocMarker,
+	myExistingPosMarker,
     defaultArea = 1000,
     markersList = [],
     placesList = [],
     defaultTypes = 'store gym food cafe bar street_address point_of_interest administrative_area_level_1 administrative_area_level_2 administrative_area_level_3 colloquial_area country floor intersection locality natural_feature neighborhood political point_of_interest post_box postal_code postal_code_prefix postal_town premise room route street_address street_number sublocality sublocality_level_4 sublocality_level_5 sublocality_level_3 sublocality_level_2 sublocality_level_1 subpremise transit_station'.split(" "),
+	map_fields = 'loc_geopt_lat loc_geopt_lng where_name where_addr where_quick_name where_detail'.split(" "),
 	default_zoom = 15;
 
 
@@ -96,7 +98,7 @@ function procSearchResponse(r,s) {
 
                                 markersList.push({marker:marker, place: results[j]});
                                 google.maps.event.addListener(marker, 'click', function( marker ) {
-                                    infowindow.setContent( addr || "aici" + pickMeStr( marker.getPosition().lat(), marker.getPosition().lng() ) );
+                                    infowindow.setContent( addr + pickMeStr( marker.getPosition().lat(), marker.getPosition().lng(), "", addr ) );
                                     infowindow.open(map, this);
                                 });
                                 pStore += "<li><a href='#"+addr+"' onclick=\"showOnlyPlace('"+j+"');\">"+addr+"</a></li>";
@@ -114,9 +116,9 @@ function procSearchResponse(r,s) {
     }
 }
 
-function pickMeStr( lat, lng )
+function pickMeStr( lat, lng, name, addr )
 {
-	return " <div class='btn' onclick=\"setMyPositionTo(" + lat + "," + lng + ", 'Not Set', 'Not Set')\">I am here</div>";
+	return " <div class='btn' onclick=\"setMyPositionTo(" + lat + "," + lng + ", '" + name + "', '" + addr + "')\">I am here</div>";
 }
 
 function createMarker(p) {
@@ -128,7 +130,7 @@ function createMarker(p) {
     markersList.push({marker: marker, place: p} );     
     google.maps.event.addListener(marker, 'click', 
             function() {
-                infowindow.setContent(p.types[0] + ": " +p.name + ", " + p.vicinity + pickMeStr( placeLoc.lat(), placeLoc.lng() ) );
+                infowindow.setContent(p.types[0] + ": " +p.name + ", " + p.vicinity + pickMeStr( placeLoc.lat(), placeLoc.lng(), p.name, p.address ) );
                 infowindow.open(map, this);
             });
 }
@@ -177,18 +179,38 @@ function findMeFnc() {
 
 function setMyPositionTo( lat, lng, where_name, where_addr )
 {
-	$("#loc_geopt_lat").val( lat );  
-    $("#loc_geopt_lng").val( lng );	
-	$("#where_name").val(where_name);
-	$("#where_addr").val(where_addr);	
+	$("#new_loc_geopt_lat").val( lat );  
+    $("#new_loc_geopt_lng").val( lng );	
+	$("#new_where_name").val(where_name);
+	$("#new_where_addr").val(where_addr);	
 }
 
+function copy_val( destination, source_prefix, dest_prefix )
+{
+	console.log( "Copying: " + source_prefix + destination + " -> " + dest_prefix + destination)
+	$( "#" + dest_prefix + destination ).val( $("#" + source_prefix + destination).val() );
+}
+
+function initMyExistingPosition()
+{
+	for( var i in map_fields )
+		copy_val( map_fields[i], "", "new_" );	
+
+	// Need to implement setting up of a marker for current position
+	// myExistingPosMarker = ?
+
+}
+
+function applyMyNewPosition()
+{	
+	for( var i in map_fields )
+		copy_val( map_fields[i], "new_", "" );
+		
+}
 function locFound(pos) {
 
     var lat = pos.coords.latitude;
     var lng = pos.coords.longitude;
-
-	setMyPositionTo( lat, lng, "Not set", "Not Set" );
 
     var mM = myLoc = new google.maps.LatLng(lat,lng);
     myLocMarker = new google.maps.Marker({
@@ -197,11 +219,10 @@ function locFound(pos) {
 		animation: google.maps.Animation.DROP,
 		icon: '/images/markers/blue_MarkerA.png'
     });
-//    markersList.push({
-//		marker: marker, place: $("#where").text()});
+
     google.maps.event.addListener(myLocMarker, 'click',
             function() {
-                infowindow.setContent($("#where").text());
+                infowindow.setContent( "My location!" );
                 infowindow.open(map, myLocMarker);
             });
     map.setCenter(mM);
