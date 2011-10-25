@@ -3,7 +3,7 @@ var map,
     placeApi,
     infowindow,
     myLoc,
-    defaultArea = 5000,
+    defaultArea = 1000,
     markersList = [],
     placesList = [],
     defaultTypes = 'store gym food cafe bar street_address point_of_interest administrative_area_level_1 administrative_area_level_2 administrative_area_level_3 colloquial_area country floor intersection locality natural_feature neighborhood political point_of_interest post_box postal_code postal_code_prefix postal_town premise room route street_address street_number sublocality sublocality_level_4 sublocality_level_5 sublocality_level_3 sublocality_level_2 sublocality_level_1 subpremise transit_station'.split(" "),
@@ -43,6 +43,7 @@ function searchFnc() {
     if (sTxt.length<5) {
         $("#searchResults").html("<h3>Type at least 5 chars</h3>");
     } else {
+	
         var placeApi = new google.maps.places.PlacesService(map);
         var searchRequest = {
             name: sTxt,
@@ -114,7 +115,7 @@ function procSearchResponse(r,s) {
 
 function pickMeStr( lat, lng )
 {
-	return " <div class='btn' onclick=\"setMyPositionTo(" + lat + "," + lng + ")\">I am here</div>";
+	return " <div class='btn' onclick=\"setMyPositionTo(" + lat + "," + lng + ", 'Not Set', 'Not Set')\">I am here</div>";
 }
 
 function createMarker(p) {
@@ -166,17 +167,19 @@ function findMeFnc() {
 
 }
 
-function setMyPositionTo( lat, lng )
+function setMyPositionTo( lat, lng, where_name, where_addr )
 {
 	$("#loc_geopt_lat").val( lat );  
     $("#loc_geopt_lng").val( lng );	
+	$("#where_name").val(where_name);
+	$("#where_addr").val(where_addr);	
 }
 
 function locFound(pos) {
     var lat = pos.coords.latitude;
     var lng = pos.coords.longitude;
 
-	setMyPositionTo( lat, lng );
+	setMyPositionTo( lat, lng, "Not set", "Not Set" );
 
     var mM = myLoc = new google.maps.LatLng(lat,lng);
     var marker = new google.maps.Marker({

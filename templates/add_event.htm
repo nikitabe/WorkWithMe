@@ -1,6 +1,11 @@
 {% extends "base.htm" %}
 
 
+{% block nav%}
+<li class="active"><a href="#">Post</a></li>
+<li><a href="/browse">Browse</a></li>
+{% endblock %}
+
 {% block head %}
     <!-- Google MAPS API -->
     <style type="text/css">
@@ -19,11 +24,27 @@
 	<script type="text/javascript" src="/JS/bootstrap-modal.js"></script>
     <script type="text/javascript">
 	$(function () {
-		init_map_stuff();
 		init_add_event();
+		
+		$('#map-overlay').bind('shown', function () {
+		  init_map_stuff();
+		})
+		
+		$('#btn_map_note_here').click( function(){
+			alert( 'a');
+			$('#map-overlay').modal( 'hide' );
+		});
+
+		$('#btn_map_cancel').click( function(){
+			$('#map-overlay').modal( 'hide' );
+		});
 	});
 
 	</script>
+{% endblock %}
+
+{% block right_col %}
+<h3>Thasssright!'</h3>
 {% endblock %}
 
 {% block main %}
@@ -33,7 +54,7 @@
               <h3>Modal Heading</h3>
             </div>
             <div class="modal-body">
-		        <input type="text" id="where" name="where" value="where?" />
+		        <input type="text" id="where" name="where" value="Starbucks" />
 		        <div id="map_success"   style="display:none;color:white;padding:10px;background-color:green;">hello</div>
 		        <div id="map_error"     style="display:none;color:white;padding:10px;background-color:red;">hello</div>
 
@@ -41,10 +62,16 @@
 		        <button class="btn" name="findMeBtn" id="findMeBtn" value="Find Me">Find Me!</button>
 		        <div id="searchResults"></div>
 		        <div id="map_canvas" ></div>
+		
+		        <input type="text" id="where_quick_name" name="where_quick_name" value="nickname" />
+		        <input type="text" id="where_name" name="where_name" value="name of the place" />
+		        <input type="text" id="where_addr" name="where_addr" value="address" />
+		        <input type="text" id="where_detail" name="where_detail" value="add a comment?" />
+				
             </div>
             <div class="modal-footer">
-              <a href="#" class="btn primary">Primary</a>
-              <a href="#" class="btn secondary">Secondary</a>
+              <a href="#" class="btn primary" id="btn_map_note_here">Found Me!</a>
+              <a href="#" class="btn secondary" id="btn_map_cancel">Nevermind...</a>
             </div>
           </div>
 

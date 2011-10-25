@@ -13,18 +13,21 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 # Let's define the data model first
 class Event(db.Model):
-    who_user        = db.UserProperty()
-    who_name        = db.StringProperty(multiline=False)
-    what            = db.StringProperty(multiline=True)
-    when_start      = db.DateTimeProperty(auto_now_add=False)
-    when_end        = db.DateTimeProperty(auto_now_add=False)
-    when_created    = db.DateTimeProperty(auto_now_add=True)
-    where			= db.StringProperty(multiline=False)
-    skill           = db.StringProperty(multiline=False)
-    skill_neighbor  = db.StringProperty(multiline=False)
-    where_loc       = db.GeoPtProperty()
-    where_loc_lat   = db.FloatProperty()
-    where_loc_lng   = db.FloatProperty()
+	who_user        = db.UserProperty()
+	who_name        = db.StringProperty(multiline=False)
+	what            = db.StringProperty(multiline=True)
+	when_start      = db.DateTimeProperty(auto_now_add=False)
+	when_end        = db.DateTimeProperty(auto_now_add=False)
+	when_created    = db.DateTimeProperty(auto_now_add=True)
+	skill           = db.StringProperty(multiline=False)
+	skill_neighbor  = db.StringProperty(multiline=False)
+	where_loc       = db.GeoPtProperty()
+	where_loc_lat   = db.FloatProperty()
+	where_loc_lng   = db.FloatProperty()
+	where_quick_name = db.StringProperty(multiline=False)
+	where_name		= db.StringProperty(multiline=False)
+	where_addr		= db.StringProperty(multiline=True)
+	where_detail 	= db.StringProperty(multiline=True)
     
 
 class Home( webapp.RequestHandler ):
@@ -55,25 +58,29 @@ class Add_event( webapp.RequestHandler ):
         path = os.path.join( os.path.dirname(__file__), 'templates/add_event.htm' )
         self.response.out.write( template.render( path, template_values ))
     def post( self ):
-        event = Event()
-        event.who_name      = self.request.get('who_name')
-        event.what          = self.request.get('what')
-        event.where         = self.request.get('where')
-        event.when_start    = fixDate( self.request.get('when_start' ) )
-        event.when_end      = fixDate( self.request.get('when_end' ) )
-        event.skill         = self.request.get('skill' )
-        event.skill_neighbor  = self.request.get('skill_neighbor' )
-        
-        logging.debug( "Outputting: " )
-        logging.debug( self.request.get( 'loc_geopt_lng' ) )
-        
-        if self.request.get( 'loc_geopt_lat' ) and self.request.get( 'loc_geopt_lng' ):
-            event.where_loc = db.GeoPt( self.request.get( 'loc_geopt_lat' ), self.request.get( 'loc_geopt_lng' ) )
-            event.where_loc_lat   = self.request.get( 'loc_geopt_lat' )
-            event.where_loc_lng   = self.request.get( 'loc_geopt_lng' )
+		event = Event()
+		event.who_name      = self.request.get('who_name')
+		event.what          = self.request.get('what')
+		event.when_start    = fixDate( self.request.get('when_start' ) )
+		event.when_end      = fixDate( self.request.get('when_end' ) )
+		event.skill         = self.request.get('skill' )
+		event.skill_neighbor  = self.request.get('skill_neighbor' )
 
-        event.put()
-        self.response.out.write( self.request.get('Event Added') )
+		event.where_quick_name = self.request.get('where_quick_name')
+		event.where_name    = self.request.get('where_name')
+		event.where_addr    = self.request.get('where_addr')
+		event.where_detail  = self.request.get('where_detail')
+
+		logging.debug( "Outputting: " )
+		logging.debug( self.request.get( 'loc_geopt_lng' ) )
+
+		if self.request.get( 'loc_geopt_lat' ) and self.request.get( 'loc_geopt_lng' ):
+		    event.where_loc = db.GeoPt( self.request.get( 'loc_geopt_lat' ), self.request.get( 'loc_geopt_lng' ) )
+		    event.where_loc_lat   = self.request.get( 'loc_geopt_lat' )
+		    event.where_loc_lng   = self.request.get( 'loc_geopt_lng' )
+
+		event.put()
+		self.response.out.write( self.request.get('Event Added') )
         
         # Add the information that was submitted
         

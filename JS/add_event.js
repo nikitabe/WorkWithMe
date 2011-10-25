@@ -11,7 +11,10 @@ function do_submit(){
 	  data: { 
 		who_name: $( "#who_name" ).val(),
 		what: $( "#what" ).val(),
-		where: $( "#where" ).val(),
+		where_quick_name: $( "#where_quick_name" ).val(),
+		where_name: $( "#where_name" ).val(),
+		where_addr: $( "#where_addr" ).val(),
+		where_detail: $( "#where_detail" ).val(),
 		when_start: $( "#when_start" ).val(),
 		when_end: $( "#when_end" ).val(),
 		skill: $( "#skill" ).val(),
