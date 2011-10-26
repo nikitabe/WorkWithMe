@@ -74,8 +74,8 @@ class Add_event( webapp.RequestHandler ):
 
 		if self.request.get( 'loc_geopt_lat' ) and self.request.get( 'loc_geopt_lng' ):
 		    event.where_loc = db.GeoPt( self.request.get( 'loc_geopt_lat' ), self.request.get( 'loc_geopt_lng' ) )
-		    event.where_loc_lat   = self.request.get( 'loc_geopt_lat' )
-		    event.where_loc_lng   = self.request.get( 'loc_geopt_lng' )
+		    event.where_loc_lat   = float( self.request.get( 'loc_geopt_lat' ) )
+		    event.where_loc_lng   = float( self.request.get( 'loc_geopt_lng' ) )
 
 		event.put()
 		self.response.out.write( self.request.get('Event Added') )
@@ -93,8 +93,8 @@ class ComingSoon( webapp.RequestHandler ):
 def main():
     application = webapp.WSGIApplication( 
                                      [
-									  ('/', Home ),
-									  #('/', ComingSoon ),
+									  #('/', Home ),
+									  ('/', ComingSoon ),
                                       ('/browse', Browse ),
                                       ('/add', Add_event ),
 									  ('/home', Home )
