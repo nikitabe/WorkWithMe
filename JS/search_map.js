@@ -13,7 +13,7 @@ var map,
 	default_zoom = 15;
 
 
-function init_map_stuff () {
+function init_map_stuff ( complete_func ) {
     var pi0 = new google.maps.LatLng(0, 0);
     
     map = new google.maps.Map(document.getElementById('map_canvas'), {
@@ -24,13 +24,12 @@ function init_map_stuff () {
     infowindow = new google.maps.InfoWindow();
     geocoder = new google.maps.Geocoder();
     init_btn_act();
-    findMeFnc();
+    findMeFnc( complete_func );
+
+
 }
 
 function init_btn_act() {
-    $("#findMeBtn").click( function () {
-        findMeFnc();
-    });
     $("#searchBtn").click( function () {
         searchFnc();
     });
@@ -43,8 +42,9 @@ function init_btn_act() {
 function searchFnc() {
     var sTxt = $("#where").val();
     $("#searchResults").html("");
-    if (sTxt.length<5) {
-        $("#searchResults").html("<h3>Type at least 5 chars</h3>");
+    if (sTxt.length<0) {
+        $("#searchResults").html("<h3>Type at least 0 chars</h3>");
+        $("#searchResults").slideDown( 'slow');
     } else {
 	
         var placeApi = new google.maps.places.PlacesService(map);
@@ -76,13 +76,13 @@ function procSearchResponse(r,s) {
             var pVicinity = r[i].vicinity;
             var address = pName + " " + pVicinity;
             var extAddress = pType +": "+ address;
-            pStore += "<li>" + pickMeStr( place.geometry.location.lat(), place.geometry.location.lng(), pName, address ) + "<a href='#"+address+"' onclick=\"showOnlyPlace('"+i+"');\">"+extAddress+"</a></li>";
+            pStore += "<li>" + pickMeStr( place.geometry.location.lat(), place.geometry.location.lng(), pName, pVicinity ) + "<a href='#"+address+"' onclick=\"showOnlyPlace('"+i+"');\">"+extAddress+"</a></li>";
             dBounds.extend(place.geometry.location);
 
         }
         map.fitBounds(dBounds);
         $("#searchResults").html("<ul>"+pStore+"</ul>");
-        
+		$("#searchResults").slideDown( 'slow');		
     } else {
         var sTxt = $("#where").val();
         geocoder.geocode( { 'address': sTxt}, function(results, stat) {
@@ -108,9 +108,10 @@ function procSearchResponse(r,s) {
                             }
                         map.fitBounds(dBounds);
                         $("#searchResults").html("<ul>"+pStore+"</ul>");
-        
+						$("#searchResults").slideDown( 'slow');
                     } else {
                         $("#searchResults").html("<h1>Nothing found</h1>");
+						$("#searchResults").slideDown( 'slow');
                     }
         });
     }
@@ -119,6 +120,24 @@ function procSearchResponse(r,s) {
 function pickMeStr( lat, lng, name, addr )
 {
 	return " <div class='btn' onclick=\"setMyPositionTo(" + lat + "," + lng + ", '" + name + "', '" + addr + "')\">I am here</div>";
+}
+
+function createEventMarker( lat, lng, address, name )
+{
+    var addr = address;  
+	var spot = new google.maps.LatLng( lat, lng );
+    var marker = new google.maps.Marker({
+            map: map,
+            position: spot
+    });
+
+    markersList.push({marker:marker});
+    google.maps.event.addListener(marker, 'click', function( marker ) {
+        infowindow.setContent( addr + pickMeStr( marker.getPosition().lat(), marker.getPosition().lng(), name, addr ) );
+        infowindow.open(map, this);
+    });
+	console.log( "creating marker!");
+	return marker;	
 }
 
 function createMarker(p) {
@@ -164,30 +183,48 @@ function showOnlyPlace(pid) {
     return false;
 }
 
-function findMeFnc() {
+function findMeFnc( complete_func ) {
+	$("#map_working").slideDown( 'slow');
+	$("#map_error").slideUp( 'slow');
+	$("#map_success").slideUp( 'slow');
+
 	clearMyLocMarker();
     if (navigator &&
             (ng = navigator.geolocation) &&
             ng.getCurrentPosition) {
-        ng.getCurrentPosition(locFound, locNoFound);
-        $("#searchResults").html("<h3>I found you!</h3>");
-    } else {
-        $("#searchResults").html("<h3>Your browser does not support geolocation</h3>");
+        ng.getCurrentPosition( function( pos ){ 
+								locFound( pos, complete_func );
+							   }, locNoFound);
+	} else {
+		$("#map_working").slideUp( 'slow', function(){
+        	$("#map_error").html("<h3>Your browser does not support geolocation.  <button class='btn' name='findMeBtn'' id='findMeBtn' value='Find Me'>Try Again!</button></h3>");
+		});
     }
 
 }
 
 function setMyPositionTo( lat, lng, where_name, where_addr )
 {
+	clearMyLocMarker();
+    for(var i=0;i<markersList.length;i++) {
+		marker = markersList[i].marker;
+		if( marker.getPosition().lat() != lat && marker.getPosition().lng() != lng )
+        	marker.setMap(null);
+    }
+
 	$("#new_loc_geopt_lat").val( lat );  
     $("#new_loc_geopt_lng").val( lng );	
 	$("#new_where_name").val(where_name);
 	$("#new_where_addr").val(where_addr);	
+	$("#step_confirm").slideDown( 'slow' );
+	$("#searchResults").slideUp( 'slow');
+
+    map.setCenter( new google.maps.LatLng(lat,lng) );
+	infowindow.close();
 }
 
 function copy_val( destination, source_prefix, dest_prefix )
 {
-	console.log( "Copying: " + source_prefix + destination + " -> " + dest_prefix + destination)
 	$( "#" + dest_prefix + destination ).val( $("#" + source_prefix + destination).val() );
 }
 
@@ -207,7 +244,11 @@ function applyMyNewPosition()
 		copy_val( map_fields[i], "new_", "" );
 		
 }
-function locFound(pos) {
+function locFound( pos, complete_func ) {
+	
+	$("#map_working").slideUp( 'slow', function(){
+    	$("#map_success").html("<h3>I found you! <button class='btn' name='findMeBtn'' id='findMeBtn' value='Find Me' onclick='findMeFnc()'>Find Me Again!</button></h3>").slideDown( "slow" );
+	});
 
     var lat = pos.coords.latitude;
     var lng = pos.coords.longitude;
@@ -227,7 +268,23 @@ function locFound(pos) {
             });
     map.setCenter(mM);
     map.setZoom(default_zoom);
+
+	// Need to call listener because that is when the bounds actually change
+	listener_handle = google.maps.event.addListener(map, 'bounds_changed', function() {
+	 	if( typeof( complete_func ) != 'undefined' ){
+			complete_func();
+			google.maps.event.removeListener(listener_handle);
+		}	
+		
+	});
+
 }
-function locNoFound() { 
-    $("#searchResults").html("<h3>Your browser does not support geolocation</h3>");
+
+var listener_handle;
+
+function locNoFound( error ) { 
+	$("#map_working").slideUp( 'slow', function(){
+    	$("#map_error").html("Can't find you :( <button class='btn' name='findMeBtn'' id='findMeBtn' value='Find Me'>Find Me Again!</button> or type in your address below.").slideDown( "slow" );
+	});
+	
 }

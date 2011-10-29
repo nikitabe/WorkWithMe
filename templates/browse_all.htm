@@ -7,16 +7,54 @@
 
 {% block head %}
 <style>
+	#map_canvas { height: 200px; width:100%; }
 
     .item {font-weight:bold;text-decoration:underline}
 </style>
+
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places&sensor=false"></script>
+<script type="text/javascript" src="http://code.google.com/apis/gears/gears_init.js"></script>
+<script type="text/javascript" src="/JS/search_map.js"></script>
+
+<script type="text/javascript">
+
+var count = 1;
+
+function findItems(){
+	$("#received").html( "FindItems: " + count ++ );
+	var bounds = map.getBounds();
+	// Make the AJAX call to get the items within bounds
+	$.ajax( {
+				url: "/get_items?bounds=" + bounds.toUrlValue(), 
+				success: function( items_json ){
+					cleanMarkerList();
+					var items = eval( items_json );
+					for( i=0;i<items.length;i++ ){
+						createEventMarker( items[i].where_loc_lat, items[i].where_loc_lng, items[i].where_name, items[i].where_addr);
+					} 
+					
+					
+				} 
+			});
+	
+}
+
+$(function () {
+	init_map_stuff( findItems );
+	initMyExistingPosition();
+});
+
+</script>
 {% endblock %}
 
 {% block main %}
+<div id="received">Gonna</div>
+<div id="map_canvas" ></div>
+
     {% for event in events %}
     <p>
 			<span class='item'>{{event.who_name}}</span>
-	        is working on 
+	        is 
 	        <span class='item'>{{event.what}}</span>
 	        at
 	        <span class='item'>{{event.whwhere}}</span>
