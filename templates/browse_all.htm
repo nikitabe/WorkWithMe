@@ -7,9 +7,12 @@
 
 {% block head %}
 <style>
-	#map_canvas { height: 200px; width:100%; }
+	#map_canvas { height: 300px; width:100%; }
 
     .item {font-weight:bold;text-decoration:underline}
+	.map_info_who { font-weight:bold}
+	.map_info_place_name { text-decoration:italic}
+	.map_info_addressP{ font-size:5px	}
 </style>
 
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places&sensor=false"></script>
@@ -30,7 +33,11 @@ function findItems(){
 					cleanMarkerList();
 					var items = eval( items_json );
 					for( i=0;i<items.length;i++ ){
-						createEventMarker( items[i].where_loc_lat, items[i].where_loc_lng, items[i].where_name, items[i].where_addr);
+						it = items[i];
+						createEventMarker( items[i].where_loc_lat, items[i].where_loc_lng, 
+								"<div class='map_info_who'>" + it.who_name + " </div>" +
+								"<div class='map_info_place_name'>" + it.where_name +  "</div>" + 
+								"<div class='map_info_address'>" + it.where_addr + "</div>");
 					} 
 					
 					

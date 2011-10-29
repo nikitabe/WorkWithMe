@@ -122,9 +122,8 @@ function pickMeStr( lat, lng, name, addr )
 	return " <div class='btn' onclick=\"setMyPositionTo(" + lat + "," + lng + ", '" + name + "', '" + addr + "')\">I am here</div>";
 }
 
-function createEventMarker( lat, lng, address, name )
+function createEventMarker( lat, lng, message  )
 {
-    var addr = address;  
 	var spot = new google.maps.LatLng( lat, lng );
     var marker = new google.maps.Marker({
             map: map,
@@ -133,7 +132,7 @@ function createEventMarker( lat, lng, address, name )
 
     markersList.push({marker:marker});
     google.maps.event.addListener(marker, 'click', function( marker ) {
-        infowindow.setContent( addr + pickMeStr( marker.getPosition().lat(), marker.getPosition().lng(), name, addr ) );
+        infowindow.setContent( message );
         infowindow.open(map, this);
     });
 	console.log( "creating marker!");
