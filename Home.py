@@ -1,97 +1,21 @@
 import cgi
 import os
-from google.appengine.ext import db
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 from google.appengine.ext.webapp import template
-from dateutil import parser
-from datetime import datetime
 import logging
-from django.utils import simplejson
-from libraries import geobox
 import json
+import models
+from google.appengine.ext import db
+from datetime import datetime
+from dateutil import parser
 
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-# List of resolutions and slices. Should be in increasing order of size/scope.
-GEOBOX_CONFIGS = (
-  (4, 5, True),
-  (3, 2, True),
-  (3, 8, False),
-  (3, 16, False),
-  (2, 5, False),
-  (1, 5, False),
-)
 
 
 
-# Let's define the data model first
-class Event(db.Model):
-	who_user        = db.UserProperty()
-	who_name        = db.StringProperty(multiline=False)
-	what            = db.StringProperty(multiline=True)
-	when_start      = db.DateTimeProperty(auto_now_add=False)
-	when_end        = db.DateTimeProperty(auto_now_add=False)
-	when_created    = db.DateTimeProperty(auto_now_add=True)
-	skill           = db.StringProperty(multiline=False)
-	skill_neighbor  = db.StringProperty(multiline=False)
-	where_loc       = db.GeoPtProperty()
-	where_loc_lat   = db.FloatProperty()
-	where_loc_lng   = db.FloatProperty()
-	where_name		= db.StringProperty(multiline=False)
-	where_addr		= db.StringProperty(multiline=True)
-	where_detail 	= db.StringProperty(multiline=True)
-	geoboxes		= db.StringListProperty() # For location calculation
-	
-	def init_geoboxes( self ):
-		all_boxes = []
-		for( resolution, slice, use_set) in GEOBOX_CONFIGS:
-			if use_set:
-				all_boxes.extend( geobox.compute_set( self.where_loc_lat, self.where_loc_lng, resolution, slice ) )
-			else:
-				all_boxes.append( geobox.compute( float( self.where_loc_lat), float(self.where_loc_lng), resolution, slice ) )
-
-		self.geoboxes = all_boxes
-
-	# Code modeled after: http://code.google.com/p/mutiny/source/browse/trunk/models.py
-	@classmethod
-	def query( cls, lat, lng, max_results, min_params ):
-		found_events = {}
-		for params in GEOBOX_CONFIGS:
-			if( len(found_events) >= max_results ):
-				break
-			if( params < min_params ):
-				break
-		
-			resolution, slice, unused = params
-			box = geobox.compute( lat, lng, resolution, slice )
-			logging.info("Searching elements in box =%s at resolution=%s, slice=%s",
-			                    box, resolution, slice)
-			query = cls.all()
-			query.filter( "geoboxes =", box )
-			results = query.fetch( 50 );
-			logging.info("Found %d results", len(results))
-			for result in results:
-				if result.key() not in found_events:
-					found_events[result.key()] = result	
-		
-		events_by_distance = []
-		for event in found_events.itervalues():
-			distance = geobox.earth_distance( lat, lng, event.where_loc_lat, event.where_loc_lng )
-			events_by_distance.append((distance, event))
-		
-		events_by_distance.sort()
-		
-		return events_by_distance
-	
-	@classmethod
-	def run_test( self ):
-		query = Event.all()
-		#query.filter("geoboxes =", box)
-		query.filter( "geoboxes = ", "42.40|-71.15|42.35|-71.10")
-		results = query.fetch( 50)
-		return len( results)
 		
 
 class Home( webapp.RequestHandler ):
@@ -122,7 +46,7 @@ class Add_event( webapp.RequestHandler ):
         path = os.path.join( os.path.dirname(__file__), 'templates/add_event.htm' )
         self.response.out.write( template.render( path, template_values ))
     def post( self ):
-		event = Event()
+		event = models.Event()
 		event.who_name      = self.request.get('who_name')
 		event.what          = self.request.get('what')
 		event.when_start    = fixDate( self.request.get('when_start' ) )
@@ -144,15 +68,7 @@ class Add_event( webapp.RequestHandler ):
 		
 		self.response.out.write( self.request.get('Event Added') )
         
-        # Add the information that was submitted
-
-def output_events():
-	events = Event.all()
-	for e in events:
-		logging.info( "%s" % e.who_name )
-		for box in e.geoboxes:
-			logging.info( " - %s" % box )
-	
+        # Add the information that was submitted	
         
 class ComingSoon( webapp.RequestHandler ):
 	def get( self ):
@@ -162,7 +78,7 @@ class ComingSoon( webapp.RequestHandler ):
 class GetItems( webapp.RequestHandler ):
 	def get( self ):
 		logging.info( "------------ Events ---------- ")
-		output_events()
+		models.output_events()
 		logging.info( "In GetItems")
 		# this is called with toUrlValue for map bounds: http://code.google.com/apis/maps/documentation/javascript/reference.html#LatLngBounds		
 		bounds = self.request.get('bounds').split( "," )		
@@ -171,7 +87,7 @@ class GetItems( webapp.RequestHandler ):
 		lat_hi = float( bounds[2] )
 		lng_hi = float( bounds[3] )
 		
-		events = Event.query( (lat_lo + lat_hi) / 2, (lng_lo + lng_hi) / 2, 10, (2,0))
+		events = models.Event.query( (lat_lo + lat_hi) / 2, (lng_lo + lng_hi) / 2, 10, (2,0))
 		
 		output_objects = []
 		for e in events:

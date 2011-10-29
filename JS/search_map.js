@@ -143,7 +143,7 @@ function createMarker(p) {
     var placeLoc = p.geometry.location;
     var marker = new google.maps.Marker({
                     map: map,
-                    position: placeLoc 
+                    position: placeLoc
                 });
     markersList.push({marker: marker, place: p} );     
     google.maps.event.addListener(marker, 'click', 
