@@ -77,17 +77,14 @@ class ComingSoon( webapp.RequestHandler ):
         
 class GetItems( webapp.RequestHandler ):
 	def get( self ):
-		logging.info( "------------ Events ---------- ")
-		models.output_events()
-		logging.info( "In GetItems")
 		# this is called with toUrlValue for map bounds: http://code.google.com/apis/maps/documentation/javascript/reference.html#LatLngBounds		
 		bounds = self.request.get('bounds').split( "," )		
 		lat_lo = float( bounds[0] )	
 		lng_lo = float( bounds[1] )
 		lat_hi = float( bounds[2] )
 		lng_hi = float( bounds[3] )
-		
-		events = models.Event.query( (lat_lo + lat_hi) / 2, (lng_lo + lng_hi) / 2, 10, (2,0))
+
+		events = models.Event.queryArea( lat_lo, lng_lo, lat_hi, lng_hi )
 		
 		output_objects = []
 		for e in events:

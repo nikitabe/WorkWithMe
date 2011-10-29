@@ -80,6 +80,11 @@ class Event(db.Model):
 		query.filter( "geoboxes = ", "42.40|-71.15|42.35|-71.10")
 		results = query.fetch( 50)
 		return len( results)
+		
+	@classmethod
+	def queryArea( self, lat_lo, lng_lo, lat_hi, lng_hi ):
+		return self.query( (lat_lo + lat_hi) / 2, (lng_lo + lng_hi) / 2, 10, (2,0))
+		
 
 def output_events():
 	events = Event.all()
