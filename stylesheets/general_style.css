@@ -13,3 +13,9 @@ body {background:#232323; padding:60px; font-family:Arial;}
 .emphasize{
     border-bottom: 1px dotted gray;
 }
+.greeting_text{
+	float:left;
+	color:#BFBFBF;
+	padding:10px 10px 10px 11px;
+	
+}

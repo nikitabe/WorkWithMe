@@ -81,45 +81,50 @@ function procSearchResponse(r,s) {
 
         }
         map.fitBounds(dBounds);
+		if( map.getZoom() > default_zoom ){
+			map.setZoom( default_zoom );
+		}
         $("#searchResults").html("<ul>"+pStore+"</ul>");
 		$("#searchResults").slideDown( 'slow');		
     } else {
         var sTxt = $("#where").val();
         geocoder.geocode( { 'address': sTxt}, function(results, stat) {
-                if (stat == google.maps.GeocoderStatus.OK) {
-                            for(var j=0; j<results.length; j++) {
-                            (function (results, j) {
-                                var addr = results[j].formatted_address;  
-                                map.setCenter(results[j].geometry.location);
-                                var marker = new google.maps.Marker({
-                                        map: map,
-                                        position: results[j].geometry.location
-                                });
+        	if (stat == google.maps.GeocoderStatus.OK) {
+ 				for(var j=0; j<results.length; j++) {
+					(function (results, j) {
+						var addr = results[j].formatted_address;  
+						map.setCenter(results[j].geometry.location);
+						var marker = new google.maps.Marker({
+							map: map,
+							position: results[j].geometry.location
+						});
 
-                                markersList.push({marker:marker, place: results[j]});
-                                google.maps.event.addListener(marker, 'click', function( marker ) {
-                                    infowindow.setContent( addr + pickMeStr( marker.getPosition().lat(), marker.getPosition().lng(), "Name of Location", addr ) );
-                                    infowindow.open(map, this);
-                                });
-                                pStore += "<li>" + pickMeStr( marker.getPosition().lat(), marker.getPosition().lng(), "", addr ) + "<a href='#"+addr+"' onclick=\"showOnlyPlace('"+j+"');\">"+addr+"</a></li>";
-                                dBounds.extend(results[j].geometry.location);
-
-                            })(results, j); //end fnc
-                            }
-                        map.fitBounds(dBounds);
-                        $("#searchResults").html("<ul>"+pStore+"</ul>");
-						$("#searchResults").slideDown( 'slow');
-                    } else {
-                        $("#searchResults").html("<h1>Nothing found</h1>");
-						$("#searchResults").slideDown( 'slow');
-                    }
+						markersList.push({marker:marker, place: results[j]});
+						google.maps.event.addListener(marker, 'click', function( marker ) {
+							infowindow.setContent( addr + pickMeStr( marker.getPosition().lat(), marker.getPosition().lng(), "", addr ) );
+							infowindow.open(map, this);
+						});
+						pStore += "<li>" + pickMeStr( marker.getPosition().lat(), marker.getPosition().lng(), "", addr ) + "<a href='#"+addr+"' onclick=\"showOnlyPlace('"+j+"');\">"+addr+"</a></li>";
+						dBounds.extend(results[j].geometry.location);
+					})(results, j); //end fnc
+				}
+				map.fitBounds(dBounds);
+				if( map.getZoom() > default_zoom ){
+					map.setZoom( default_zoom );
+				}
+				$("#searchResults").html("<ul>"+pStore+"</ul>");
+				$("#searchResults").slideDown( 'slow');
+			} else {
+				$("#searchResults").html("<h1>Nothing found</h1>");
+				$("#searchResults").slideDown( 'slow');
+			}
         });
     }
 }
 
 function pickMeStr( lat, lng, name, addr )
 {
-	return " <div class='btn' onclick=\"setMyPositionTo(" + lat + "," + lng + ", '" + name + "', '" + addr + "')\">I am here</div>";
+	return " <div class='btn' onclick=\"setMyPositionTo(" + lat + "," + lng + ", '" + escape(name) + "', '" + escape(addr) + "')\">I am here</div>";
 }
 
 function createEventMarker( lat, lng, message  )
@@ -213,8 +218,8 @@ function setMyPositionTo( lat, lng, where_name, where_addr )
 
 	$("#new_loc_geopt_lat").val( lat );  
     $("#new_loc_geopt_lng").val( lng );	
-	$("#new_where_name").val(where_name);
-	$("#new_where_addr").val(where_addr);	
+	$("#new_where_name").val( unescape( where_name ) );
+	$("#new_where_addr").val( unescape( where_addr ) );	
 	$("#step_confirm").slideDown( 'slow' );
 	$("#searchResults").slideUp( 'slow');
 

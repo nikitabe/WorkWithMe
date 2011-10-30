@@ -2,6 +2,8 @@ from google.appengine.ext import db
 from dateutil import parser
 from datetime import datetime
 from libraries import geobox
+from google.appengine.api import users
+
 import logging
 
 # List of resolutions and slices. Should be in increasing order of size/scope.
@@ -13,6 +15,25 @@ GEOBOX_CONFIGS = (
   (2, 5, False),
   (1, 5, False),
 )
+
+class CUser( db.Model ):
+	username = db.StringProperty()
+	email 	 = db.EmailProperty()
+	def user_id( self ):
+		return self.key()
+
+def get_current_user():
+	user = users.get_current_user()
+	if user:
+		return get_or_create_user( user )
+	return None
+	
+def get_or_create_user( user ):
+	u = CUser.get_by_key_name( user.user_id() )
+	if u is None:
+		u = CUser( key_name=user.user_id(), email=user.email())
+	return u 
+	
 
 # Let's define the data model first
 class Event(db.Model):
@@ -44,7 +65,7 @@ class Event(db.Model):
 
 	# Code modeled after: http://code.google.com/p/mutiny/source/browse/trunk/models.py
 	@classmethod
-	def query( cls, lat, lng, max_results, min_params ):
+	def query( cls, lat, lng, max_results, min_params, t = None ):
 		found_events = {}
 		for params in GEOBOX_CONFIGS:
 			if( len(found_events) >= max_results ):
@@ -58,6 +79,9 @@ class Event(db.Model):
 			                    box, resolution, slice)
 			query = cls.all()
 			query.filter( "geoboxes =", box )
+			if t != None:
+				logging.info( "datetime: " + t.strftime("%A, %d. %B %Y %I:%M%p") )
+				query.filter( "when_start <=", t )
 			results = query.fetch( 50 );
 			logging.info("Found %d results", len(results))
 			for result in results:
@@ -82,8 +106,8 @@ class Event(db.Model):
 		return len( results)
 		
 	@classmethod
-	def queryArea( self, lat_lo, lng_lo, lat_hi, lng_hi ):
-		return self.query( (lat_lo + lat_hi) / 2, (lng_lo + lng_hi) / 2, 10, (2,0))
+	def queryArea( self, lat_lo, lng_lo, lat_hi, lng_hi, t = None ):
+		return self.query( (lat_lo + lat_hi) / 2, (lng_lo + lng_hi) / 2, 10, (2,0), t)
 		
 
 def output_events():

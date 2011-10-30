@@ -14,25 +14,42 @@ from dateutil import parser
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 
+class MyPage( webapp.RequestHandler ):
 
-
-		
-
-class Home( webapp.RequestHandler ):
+	def AddUserInfo(self, template_vars):
+		user = models.get_current_user()
+		greeting = ""
+		if user:
+			user_str = ""
+			if user.username:
+				user_str = " " + user.username
+			greeting = "<div class='greeting_text'>Hello%s!</div><ul><li><a href='%s'> Log Out</a></li></ul>" % (user_str, users.create_logout_url( self.request.uri ) )
+		else:
+			greeting = "<ul><li><a href='%s'>Log In</a></li></ul>" % users.create_login_url( self.request.uri )
+			
+		template_vars.update( {
+			"user":user,
+			"greeting":greeting
+		})
+			
+	
+class Home( MyPage ):
     def get( self ):
-        template_values = {}
-        path = os.path.join( os.path.dirname(__file__), 'templates/index.htm' )
-        # path = os.path.join( os.path.dirname(__file__), 'coming_soon.htm' )
-        self.response.out.write( template.render( path, template_values ))
+		template_values = {}
+		self.AddUserInfo( template_values )
+		path = os.path.join( os.path.dirname(__file__), 'templates/index.htm' )
+		# path = os.path.join( os.path.dirname(__file__), 'coming_soon.htm' )
+		self.response.out.write( template.render( path, template_values ))
 
-class Browse( webapp.RequestHandler ):
-    def get( self ):
-        events = db.GqlQuery( "SELECT * "
-                              "FROM Event" )
-        
-        template_values = {'events':events}
-        path = os.path.join( os.path.dirname(__file__), 'templates/browse_all.htm' )
-        self.response.out.write( template.render( path, template_values ))
+class Browse( MyPage ):
+	def get( self ):
+		events = db.GqlQuery( "SELECT * "
+								"FROM Event" )
+
+		template_values = {'events':events}
+		self.AddUserInfo( template_values )
+		path = os.path.join( os.path.dirname(__file__), 'templates/browse_all.htm' )
+		self.response.out.write( template.render( path, template_values ))
 
 def fixDate( str ):
     if str.lower() == "now":
@@ -40,12 +57,13 @@ def fixDate( str ):
     else:
         return parser.parse( str )
 
-class Add_event( webapp.RequestHandler ):
-    def get( self ):
-        template_values = {}
-        path = os.path.join( os.path.dirname(__file__), 'templates/add_event.htm' )
-        self.response.out.write( template.render( path, template_values ))
-    def post( self ):
+class Add_event( MyPage ):
+	def get( self ):
+		template_values = {}
+		self.AddUserInfo( template_values )
+		path = os.path.join( os.path.dirname(__file__), 'templates/add_event.htm' )
+		self.response.out.write( template.render( path, template_values ))
+	def post( self ):
 		event = models.Event()
 		event.who_name      = self.request.get('who_name')
 		event.what          = self.request.get('what')
@@ -83,18 +101,19 @@ class GetItems( webapp.RequestHandler ):
 		lng_lo = float( bounds[1] )
 		lat_hi = float( bounds[2] )
 		lng_hi = float( bounds[3] )
-
-		events = models.Event.queryArea( lat_lo, lng_lo, lat_hi, lng_hi )
 		
-		output_objects = []
+		events = models.Event.queryArea( lat_lo, lng_lo, lat_hi, lng_hi, datetime.now() )
+		
+		# This is inefficient
+		locations = {}
 		for e in events:
 			e_obj = e[1]
-			out_obj = { 
+			out_obj = {
 					'who_name': e_obj.who_name,      
 					'what': e_obj.what,           
 					#'when_start': e_obj.when_start,     
 					#'when_end': e_obj.when_end,       
-					# 'when_created': e_obj.when_created,   
+					# 'when_created': e_obj.when_created,
 					'skill': e_obj.skill,          
 					'skill_neighbor': e_obj.skill_neighbor, 
 					# 'where_loc': e_obj.where_loc,      
@@ -104,12 +123,26 @@ class GetItems( webapp.RequestHandler ):
 					'where_addr': e_obj.where_addr,	
 					'where_detail': e_obj.where_detail,   					
 			}
-			output_objects.append( out_obj )
 			
-		output = json.dumps(output_objects);
+			
+			k = "%s|%s" % (e_obj.where_loc_lat, e_obj.where_loc_lng)
+			
+			right_list = locations.get( k )
+			if right_list:
+				right_list.append( out_obj )
+			else:
+				new_list = [out_obj]
+				locations.update( {k:new_list} ) 
+					
+		#output_objects = []
+		#for e in events:
+		#	e_obj = e[1]
+		#	output_objects.append( out_obj )
+			
+		output = json.dumps(locations);
 			#output += "%s|" %e[1].key()
 
-		self.response.out.write( output )
+		self.response.out.write( output + " " )
                             
 
 def main():

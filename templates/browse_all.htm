@@ -28,16 +28,25 @@ function findItems(){
 	var bounds = map.getBounds();
 	// Make the AJAX call to get the items within bounds
 	$.ajax( {
-				url: "/get_items?bounds=" + bounds.toUrlValue(), 
+				url: "/get_items?bounds=" + bounds.toUrlValue() + '&json=1', 
+				dataType: 'json',
+				error: function(jqXHR, textStatus, errorThrown){
+					$("#received").html( "There was an error: " + jqXHR + ", " + textStatus + ", "+ errorThrown );
+				},
 				success: function( items_json ){
+					$("#received").html( "he: " + items_json );
 					cleanMarkerList();
-					var items = eval( items_json );
-					for( i=0;i<items.length;i++ ){
-						it = items[i];
-						createEventMarker( items[i].where_loc_lat, items[i].where_loc_lng, 
-								"<div class='map_info_who'>" + it.who_name + " </div>" +
-								"<div class='map_info_place_name'>" + it.where_name +  "</div>" + 
-								"<div class='map_info_address'>" + it.where_addr + "</div>");
+					var locations = eval( items_json );
+					
+					
+					for( var loc in locations ){
+						
+						var coordinates = loc.split( "|");
+						var items = locations[loc];
+						createEventMarker( coordinates[0], coordinates[1], 
+								"<div class='map_info_who'>" + items.length + " people hanging out at </div>" +
+								"<div class='map_info_place_name'>" + items[0].where_name +  "</div>" + 
+								"<div class='map_info_address'>" + items[0].where_addr + "</div>");
 					} 
 					
 					

@@ -1,7 +1,4 @@
 #from dateutil import parser
 #date_object = parser.parse( '1pm' )
-from libraries import geobox
-import Home.py
-
-output_events()
-
+from datetime import datetime  
+print datetime.now().strftime("%A, %d. %B %Y %I:%M%p")
