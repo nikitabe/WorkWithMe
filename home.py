@@ -5,7 +5,7 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 from google.appengine.ext.webapp import template
 import logging
-import json
+from django.utils import simplejson
 import models
 from google.appengine.ext import db
 from datetime import datetime
@@ -24,12 +24,14 @@ class MyPage( webapp.RequestHandler ):
 			if user.username:
 				user_str = " " + user.username
 			greeting = "<ul><li><a href='%s'> Log Out</a></li></ul>" % (users.create_logout_url( self.request.uri ) )
+			template_vars.update( {
+				"username":user.username,
+				"user":user
+			})
 		else:
 			greeting = "<ul><li><a href='%s'>Log In</a></li></ul>" % users.create_login_url( self.request.uri )
-		
+
 		template_vars.update( {
-			"username":user.username,
-			"user":user,
 			"greeting":greeting
 		})
 			
@@ -89,9 +91,6 @@ class Add_event( MyPage ):
         
         # Add the information that was submitted	
         
-class ComingSoon( webapp.RequestHandler ):
-	def get( self ):
-		 self.redirect( 'http://soon.workwithme.org')          
 
         
 class GetItems( webapp.RequestHandler ):
@@ -140,7 +139,7 @@ class GetItems( webapp.RequestHandler ):
 		#	e_obj = e[1]
 		#	output_objects.append( out_obj )
 			
-		output = json.dumps(locations);
+		output = simplejson.dumps(locations);
 			#output += "%s|" %e[1].key()
 
 		self.response.out.write( output + " " )
@@ -157,6 +156,9 @@ class Profile( MyPage ):
 		user.put()
 		self.response.out.write( "Update complete" )
 		
+class ComingSoon( webapp.RequestHandler ):
+	def get( self ):
+		 self.redirect( 'http://soon.workwithme.org')          
 
 def main():
 	application = webapp.WSGIApplication( 
