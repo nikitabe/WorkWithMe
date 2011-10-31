@@ -23,11 +23,12 @@ class MyPage( webapp.RequestHandler ):
 			user_str = ""
 			if user.username:
 				user_str = " " + user.username
-			greeting = "<div class='greeting_text'>Hello%s!</div><ul><li><a href='%s'> Log Out</a></li></ul>" % (user_str, users.create_logout_url( self.request.uri ) )
+			greeting = "<ul><li><a href='%s'> Log Out</a></li></ul>" % (users.create_logout_url( self.request.uri ) )
 		else:
 			greeting = "<ul><li><a href='%s'>Log In</a></li></ul>" % users.create_login_url( self.request.uri )
-			
+		
 		template_vars.update( {
+			"username":user.username,
 			"user":user,
 			"greeting":greeting
 		})
@@ -143,7 +144,19 @@ class GetItems( webapp.RequestHandler ):
 			#output += "%s|" %e[1].key()
 
 		self.response.out.write( output + " " )
-                            
+
+class Profile( MyPage ):
+	def get( self ):
+		template_values = {}
+		self.AddUserInfo( template_values )
+		path = os.path.join( os.path.dirname(__file__), 'templates/profile.htm' )
+		self.response.out.write( template.render( path, template_values ))
+	def post( self ):
+		user = models.get_current_user()
+		user.username = self.request.get( "username" )
+		user.put()
+		self.response.out.write( "Update complete" )
+		
 
 def main():
 	application = webapp.WSGIApplication( 
@@ -153,7 +166,8 @@ def main():
                                       ('/browse', Browse ),
                                       ('/add', Add_event ),
 									  ('/home', Home ),
-									  ('/get_items', GetItems )
+									  ('/get_items', GetItems ),
+									  ('/profile', Profile )
                                       ], debug=True )
 	util.run_wsgi_app( application )
 

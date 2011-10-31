@@ -1,0 +1,37 @@
+{% extends "base.htm" %}
+
+{% block head %}
+<SCRIPT>
+function submitUserInfo()
+{
+	$.ajax({
+		url: "/profile",
+		data: {username: $("#username").val()},
+		type: "POST",
+		error: function( msg ){
+			$("#response").html( msg ).slideDown( 'slow');			
+		},
+		success: function( msg ){
+			$("#response").html( msg ).slideDown( 'slow');
+		}
+	}
+		);
+}
+$(function(){
+	$("#profile_button").addClass( "active");
+	$("#submit_user").click( submitUserInfo );
+});
+</SCRIPT>
+{% endblock %}
+
+{% block nav%}
+<li id="browse"><a href="/browse">Browse</a></li>
+<li id="add"><a href="/add">Post</a></li>
+{% endblock %}
+
+{% block main %}
+Please enter your username:
+<input id="username" value="{{username}}"/ >
+<button id="submit_user" class="btn">Submit</button>
+<div id="response" class="hide"></div>
+{% endblock %}

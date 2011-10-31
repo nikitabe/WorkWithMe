@@ -103,6 +103,13 @@
 			{% endblock %}
           </ul>
 		  <div class="pull-right">
+			{% if user%}
+			<ul>
+				<li id="profile_button">
+					<a href="/profile">Profile</a>
+				</li>
+			</ul>
+			{% endif %}
 			{{ greeting }}
 		  </div>
         </div>

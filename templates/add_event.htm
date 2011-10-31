@@ -99,7 +99,7 @@
 
 <div class="statement">
     Hi.  My <span class='emphasize'>name</span> is 
-    <input type="text" id="who_name" name="who_name"></input>.<br/>
+    <input type="text" id="who_name" name="who_name" value="{% if user%}{{user.username}}{% endif%}"></input>.<br/>
     <hr/>I'll be at 
 
 	<button data-controls-modal="map-overlay" data-backdrop="true" data-keyboard="true" class="btn">Find Location</button>
