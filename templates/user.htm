@@ -1,0 +1,11 @@
+{% extends "base.htm" %}
+
+{% block nav%}
+<li id="browse"><a href="/browse">Browse</a></li>
+<li id="add"><a href="/add">Post</a></li>
+<li id="user" class="active"><a href="#">User</a></li>
+{% endblock %}
+
+{% block main %}
+This page is for {{user.username}}.
+{% endblock %}

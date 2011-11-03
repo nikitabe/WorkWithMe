@@ -1,0 +1,18 @@
+<p>
+		<span class='item_prop'><a href='/user/{{event.who_name}}'>{{event.who_name}}</a></span>
+        is 
+        <span class='item_prop'>{{event.what}}</span>
+        at
+        <span class='item_prop'>{{event.whwhere}}</span>
+        from 
+        <span class='item_prop'>{{event.when_start}}</span>
+        to 
+        <span class='item_prop'>{{event.when_end}}</span>
+        , who knows 
+        <span class='item_prop'>{{event.skill}}</span>
+        and would like to sit next to
+        <span class='item_prop'>{{event.skill_neighbor}}</span>.
+		{% if show_link %}
+			<a href="/event/{{event.id}}">(View {{event.id}})</a> 
+		{% endif %}
+</p>

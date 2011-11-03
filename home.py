@@ -44,12 +44,23 @@ class Home( MyPage ):
 		# path = os.path.join( os.path.dirname(__file__), 'coming_soon.htm' )
 		self.response.out.write( template.render( path, template_values ))
 
+
+def PrepItemTemplate( items ):
+	#ID is not automatically inserted
+	for it in items:
+		logging.info( "item %s" % it.key().id())
+		it.id = it.key().id()
+
+	for it in items:
+		logging.info( "item %s" % it.id)
+
 class Browse( MyPage ):
+	
 	def get( self ):
 		events = db.GqlQuery( "SELECT * "
-								"FROM Event" )
-
-		template_values = {'events':events}
+								"FROM Event" ).fetch(50)
+		PrepItemTemplate( events )
+		template_values = {'events':events, 'show_link':1}
 		self.AddUserInfo( template_values )
 		path = os.path.join( os.path.dirname(__file__), 'templates/browse_all.htm' )
 		self.response.out.write( template.render( path, template_values ))
@@ -155,6 +166,28 @@ class Profile( MyPage ):
 		user.username = self.request.get( "username" )
 		user.put()
 		self.response.out.write( "Update complete" )
+
+
+
+class EventHandler( MyPage ):
+	def get( self, event_id ):
+		# implement getting the item according to an id
+		logging.info( "input: %s" % event_id)
+		event = models.get_event( long( event_id ) )
+		PrepItemTemplate( [event] )
+		logging.info( "event id: %s, %s" % (event.id, event.who_name ) )
+		template_values = {'show_link':0, 'event':event }
+	
+		self.AddUserInfo( template_values )
+		path = os.path.join( os.path.dirname(__file__), 'templates/event.htm' )
+		self.response.out.write( template.render( path, template_values ))
+
+class UserHandler( MyPage ):
+	def get( self, username ):
+		user = models.get_user_by_username( username )
+		template_values = { 'user':user } 
+		path = os.path.join( os.path.dirname( __file__ ), 'templates/user.htm')
+		self.response.out.write( template.render( path, template_values ))		
 		
 class ComingSoon( webapp.RequestHandler ):
 	def get( self ):
@@ -165,11 +198,13 @@ def main():
                                      [
 									  ('/', Home ),
 									  #('/', ComingSoon ),
+									  ('/event/(.*)', EventHandler),
                                       ('/browse', Browse ),
                                       ('/add', Add_event ),
 									  ('/home', Home ),
 									  ('/get_items', GetItems ),
-									  ('/profile', Profile )
+									  ('/profile', Profile ),
+									  ('/user/(.*)', UserHandler)
                                       ], debug=True )
 	util.run_wsgi_app( application )
 

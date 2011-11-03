@@ -33,7 +33,12 @@ def get_or_create_user( user ):
 	if u is None:
 		u = CUser( key_name=user.user_id(), email=user.email())
 	return u 
+
+def get_user_by_user_id( user_id ):
+	return Users.get_by_id( user_id )
 	
+def get_user_by_username( username ):
+	return CUser.all().filter( "username = ", username ).get()
 
 # Let's define the data model first
 class Event(db.Model):
@@ -75,15 +80,14 @@ class Event(db.Model):
 		
 			resolution, slice, unused = params
 			box = geobox.compute( lat, lng, resolution, slice )
-			logging.info("Searching elements in box =%s at resolution=%s, slice=%s",
-			                    box, resolution, slice)
+			#logging.info("Searching elements in box =%s at resolution=%s, slice=%s", box, resolution, slice)
 			query = cls.all()
 			query.filter( "geoboxes =", box )
 			if t != None:
-				logging.info( "datetime: " + t.strftime("%A, %d. %B %Y %I:%M%p") )
+				# logging.info( "datetime: " + t.strftime("%A, %d. %B %Y %I:%M%p") )
 				query.filter( "when_start <=", t )
 			results = query.fetch( 50 );
-			logging.info("Found %d results", len(results))
+			# logging.info("Found %d results", len(results))
 			for result in results:
 				if result.key() not in found_events:
 					found_events[result.key()] = result	
@@ -116,3 +120,6 @@ def output_events():
 		logging.info( "%s" % e.who_name )
 		for box in e.geoboxes:
 			logging.info( " - %s" % box )
+
+def get_event( event_id ):
+	return Event.get_by_id( event_id )
