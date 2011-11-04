@@ -5,6 +5,11 @@ function init_add_event()
 }
 
 function do_submit(){
+	$( "#who_name_error" ).slideUp( 'slow' );
+	// Perform validation
+	if( $( "#who_name" ).val() == "" )
+		$( "#who_name_error" ).html( 'Please enter a name' ).slideDown( 'slow' ); 
+	
 	$.ajax({
 	  url: "/add",
 	  type: "POST",
@@ -23,7 +28,7 @@ function do_submit(){
 		loc_geopt_lng: $( "#loc_geopt_lng" ).val(),
 		},
 	  success: function( msg ){
-	    $("#out_str").html("Value Updated!" );
+	    $("#out_str").html( msg );
 	  }
 	});
 }

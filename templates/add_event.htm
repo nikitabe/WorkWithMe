@@ -17,6 +17,15 @@
 		#map_error   {display:none;color:white;padding:2px 10px 2px 10px;background-color:red;}
 		.find_step input {width:100%}
 		.hidden { display:none}
+		#where {width:435px;}
+		#searchBtn {width:80px}
+		#searchResults { overflow: scroll; height:70px; padding: 4px; background:#eee; margin-top:4px}
+		#searchResults ul { list-style-type: none; margin-left: 2px;}
+		#searchResults ul>li { margin-top:2px;}
+		#searchResults .address {margin-left:5px;}
+		#findMeBtn {float:right;}
+
+		
         </style>
     <!--
     <script type="text/javascript"
@@ -61,9 +70,9 @@
 <div id="map-overlay" class="modal hide fade" style="display: none; ">
             <div class="modal-header">
               <a href="#" class="close">×</a>
-              <h3>Where are you?</h3>
             </div>
             <div class="modal-body">
+				<div><button class='btn' name='findMeBtn' id='findMeBtn' value='Find Me' onclick='findMeFnc()'>Find Me Again!</button> </div>
 		        <div id="map_canvas" ></div>
 		        <div id="map_success"></div>
 		        <div id="map_working">
@@ -72,13 +81,13 @@
 		        <div id="map_error"></div>
 				
 				<div class="find_step" >
-					1.  Search for the place/address where you are:<br/>
+					2.  Search for the place/address where you are:<br/>
 			        <input type="text" id="where" name="where" value="Starbucks" />
 					<button class="btn" name="searchBtn" id="searchBtn" value="Search">Search</button>
 			        <div id="searchResults"></div>
 				</div>
 				<div class="find_step hidden" id="step_confirm">
-					2.  Confirm the location:
+					3.  Confirm the location:
 					<br/>
 			        <input type="text" id="new_where_name" name="new_where_name" value="name of the place" />
 			        <br/>
@@ -99,7 +108,8 @@
 
 <div class="statement">
     Hi.  My <span class='emphasize'>name</span> is 
-    <input type="text" id="who_name" name="who_name" value="{% if user%}{{user.username}}{% endif%}"></input>.<br/>
+    <input type="text" id="who_name" name="who_name" value="{% if user%}{{user.username}}{% endif%}"></input>.
+<div id="#who_name_error" class="hide"></div><br/>
     <hr/>I'll be at 
 
 	<button data-controls-modal="map-overlay" data-backdrop="true" data-keyboard="true" class="btn">Find Location</button>

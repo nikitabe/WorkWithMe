@@ -50,6 +50,8 @@ def PrepItemTemplate( items ):
 	for it in items:
 		logging.info( "item %s" % it.key().id())
 		it.id = it.key().id()
+		if( it.parent() ):
+			it.username = it.parent().username
 
 	for it in items:
 		logging.info( "item %s" % it.id)
@@ -78,7 +80,21 @@ class Add_event( MyPage ):
 		path = os.path.join( os.path.dirname(__file__), 'templates/add_event.htm' )
 		self.response.out.write( template.render( path, template_values ))
 	def post( self ):
-		event = models.Event()
+		n = self.request.get('who_name')
+		logging.info( len( n ) )
+		if len( n ) == 0:
+			self.response.out.write( 'Please enter your name' )
+			return
+
+		existing_user = models.get_user_by_username( n )
+		if existing_user:
+			self.response.out.write( 'A user with this username already exists' )
+			return
+			
+					
+		user = models.get_current_user()
+		
+		event = models.Event( parent = user )
 		event.who_name      = self.request.get('who_name')
 		event.what          = self.request.get('what')
 		event.when_start    = fixDate( self.request.get('when_start' ) )
@@ -98,7 +114,8 @@ class Add_event( MyPage ):
 		event.init_geoboxes()
 		event.put()
 		
-		self.response.out.write( self.request.get('Event Added') )
+		# self.response.out.write( 'Event Added' )
+		self.redirect( '/user/%s' % user.username )
         
         # Add the information that was submitted	
         
@@ -185,7 +202,9 @@ class EventHandler( MyPage ):
 class UserHandler( MyPage ):
 	def get( self, username ):
 		user = models.get_user_by_username( username )
-		template_values = { 'user':user } 
+		events = user.get_events()
+		template_values = { 'user':user, 'events':events } 
+		self.AddUserInfo( template_values )
 		path = os.path.join( os.path.dirname( __file__ ), 'templates/user.htm')
 		self.response.out.write( template.render( path, template_values ))		
 		

@@ -21,6 +21,9 @@ class CUser( db.Model ):
 	email 	 = db.EmailProperty()
 	def user_id( self ):
 		return self.key()
+		
+	def get_events( self ):
+		return Event.all().ancestor( self ).fetch(100)
 
 def get_current_user():
 	user = users.get_current_user()
@@ -123,3 +126,4 @@ def output_events():
 
 def get_event( event_id ):
 	return Event.get_by_id( event_id )
+	

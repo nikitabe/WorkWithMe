@@ -8,4 +8,11 @@
 
 {% block main %}
 This page is for {{user.username}}.
+{% if isadmin %}
+	<a class="btn" href="/add">Submit</a>
+{% endif %}
+<hr/>
+	{% for event in events %}
+		{% include "event_snip.htm" %}
+	{% endfor %}
 {% endblock %}

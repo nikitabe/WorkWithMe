@@ -1,5 +1,13 @@
 <p>
-		<span class='item_prop'><a href='/user/{{event.who_name}}'>{{event.who_name}}</a></span>
+		<span class='item_prop'>
+			{% if event.username %}
+			<a href='/user/{{event.username}}'>
+				{{event.who_name}}
+			</a>
+			{% else %}
+				{{event.who_name}}
+			{% endif %}
+		</span>
         is 
         <span class='item_prop'>{{event.what}}</span>
         at
