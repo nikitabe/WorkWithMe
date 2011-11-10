@@ -1,37 +1,57 @@
 {% extends "base.htm" %}
 
+{% block header %}
+<h1>Who are you?</h1>
+{% endblock %}
+
 {% block head %}
+{% if user %}
+
 <SCRIPT>
 function submitUserInfo()
 {
+	if( $("#username").val() == "" ){
+		$("#response").slideUp('fast', function(){
+			$("#response").removeClass("success").addClass("error").html( "Please enter a username." ).slideDown( 'slow');			
+		});
+		return;
+	}
 	$.ajax({
 		url: "/profile",
 		data: {username: $("#username").val()},
 		type: "POST",
 		error: function( msg ){
-			$("#response").html( msg ).slideDown( 'slow');			
+			$("#response").slideUp('fast', function(){
+				$("#response").removeClass("success").addClass("error").html( msg ).slideDown( 'slow');			
+			});
 		},
 		success: function( msg ){
-			$("#response").html( msg ).slideDown( 'slow');
+			$("#response").slideUp('fast', function(){
+				$("#response").removeClass("error").addClass("success").html( msg ).slideDown( 'slow');
+				// TODO: set the link to the new username
+				// $("#nav_me").href( '/user/' + $("#username").val());			
+			});
 		}
 	}
 		);
 }
-$(function(){
-	$("#profile_button").addClass( "active");
-	$("#submit_user").click( submitUserInfo );
-});
+	$(function(){
+		$("#profile_button").addClass( "active");
+		$("#submit_user").click( submitUserInfo );
+	});
 </SCRIPT>
-{% endblock %}
-
-{% block nav%}
-<li id="browse"><a href="/browse">Browse</a></li>
-<li id="add"><a href="/add">Post</a></li>
+{% endif %}
 {% endblock %}
 
 {% block main %}
+
+{% if user %}
 Please enter your username:
-<input id="username" value="{{username}}"/ >
+<input id="username" value="{{username}}" placeholder="Enter your Username"/>
 <button id="submit_user" class="btn">Submit</button>
-<div id="response" class="hide"></div>
+<div id="response" class="alert-message hide"></div>
+{% else %}
+Sorry, you must be logged in to access this page.
+{% endif %}
+
 {% endblock %}

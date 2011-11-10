@@ -20,3 +20,5 @@ body {background:#232323; padding:60px; font-family:Arial;}
 	
 }
 .item_prop {font-weight:bold;text-decoration:underline}
+
+.hidden { display:none}

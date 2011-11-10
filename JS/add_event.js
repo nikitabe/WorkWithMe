@@ -4,16 +4,41 @@ function init_add_event()
 
 }
 
+function hide_errors()
+{
+	$( "#who_name_error" ).slideUp( 'fast' );
+	$( "#address_box_error" ).slideUp( 'fast');
+	$( "#when_end_error" ).slideUp( 'fast');
+	
+}
+
 function do_submit(){
-	$( "#who_name_error" ).slideUp( 'slow' );
+	hide_errors()
+	
+	var has_error = false;
 	// Perform validation
-	if( $( "#who_name" ).val() == "" )
-		$( "#who_name_error" ).html( 'Please enter a name' ).slideDown( 'slow' ); 
+	if( $( "#who_name" ).val() == "" ){
+		$( "#who_name_error" ).html( 'Please enter a name' ).slideDown( 'slow' );
+		has_error = true; 
+	}
+		
+	if( $( "#loc_geopt_lat" ).val() == "" || $( "#loc_geopt_lng" ).val() == "" ){
+		$( "#address_box_error" ).html("Your location is not properly set.  Please set your location.").slideDown( 'slow');
+		has_error = true;
+	}
+
+	if( $( "#when_end" ).val() == "" ){
+		$( "#when_end_error" ).html("Please enter a time.").slideDown( 'slow');
+		has_error = true;
+	}
+	
+	if( has_error ) return false;
 	
 	$.ajax({
 	  url: "/add",
 	  type: "POST",
 	  data: { 
+		username: $( '#username' ).val(),
 		who_name: $( "#who_name" ).val(),
 		what: $( "#what" ).val(),
 		where_quick_name: $( "#where_quick_name" ).val(),
@@ -28,7 +53,12 @@ function do_submit(){
 		loc_geopt_lng: $( "#loc_geopt_lng" ).val(),
 		},
 	  success: function( msg ){
-	    $("#out_str").html( msg );
+		if( msg == "OK")
+    		// $("#out_str").html( "The add went ok.  Implement redirect to /user/"  );
+			window.location.href = "/user/" + $( '#username' ).val();
+		else{
+	    		$("#out_str").html( msg );
+		}
 	  }
 	});
 }

@@ -13,4 +13,25 @@ indexes:
 - kind: Event
   properties:
   - name: geoboxes
+  - name: when_end
+
+- kind: Event
+  properties:
+  - name: geoboxes
   - name: when_start
+
+- kind: Event
+  properties:
+  - name: user
+  - name: when_end
+
+- kind: Event
+  ancestor: yes
+  properties:
+  - name: when_end
+
+- kind: Event
+  ancestor: yes
+  properties:
+  - name: when_end
+    direction: desc

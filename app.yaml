@@ -16,5 +16,8 @@ handlers:
 - url: /test
   static_dir: test
 
+- url: /profile
+  script: home.py
+
 - url: /.*
   script: home.py

@@ -1,9 +1,12 @@
 {% extends "base.htm" %}
 
 {% block nav%}
-<li><a href="/add">Post</a></li>
-<li class="active"><a href="/browse">Browse</a></li>
 {% endblock %}
+
+{% block header %}
+<h1>Where is everyone?</h1>
+{% endblock %}
+
 
 {% block head %}
 <style>
@@ -22,18 +25,24 @@
 
 var count = 1;
 
-function findItems(){
-	$("#received").html( "FindItems: " + count ++ );
+function findItems( completed_func ){
+	$("#map_success").slideUp( 'fast' );
+	$("#map_error").slideUp( 'fast', function(){
+		$("#map_working").html( "Working..." ).slideDown( 'slow' );
+	});
+
 	var bounds = map.getBounds();
 	// Make the AJAX call to get the items within bounds
 	$.ajax( {
 				url: "/get_items?bounds=" + bounds.toUrlValue() + '&json=1', 
 				dataType: 'json',
 				error: function(jqXHR, textStatus, errorThrown){
-					$("#received").html( "There was an error: " + jqXHR + ", " + textStatus + ", "+ errorThrown );
-				},
+					$("#map_working").slideUp( 'fast', function(){
+							$("#map_error").html( "There was an error: " + jqXHR + ", " + textStatus + ", "+ errorThrown ).slideDown( 'slow' );
+						} );
+					},
 				success: function( items_json ){
-					$("#received").html( "he: " + items_json );
+					//$("#received").html( "he: " + items_json );
 					cleanMarkerList();
 					var locations = eval( items_json );
 					
@@ -47,7 +56,7 @@ function findItems(){
 								"<div class='map_info_place_name'>" + items[0].where_name +  "</div>" + 
 								"<div class='map_info_address'>" + items[0].where_addr + "</div>");
 					} 
-					
+					completed_func();
 					
 				} 
 			});
@@ -55,16 +64,28 @@ function findItems(){
 }
 
 $(function () {
-	init_map_stuff( findItems );
-	initMyExistingPosition();
+	$("#nav_browse").addClass( "active" );
+	init_map_stuff( function(){
+		findMeFnc( function(){
+			findItems( function(){
+				$("#map_working").slideUp( 'fast', function(){
+					$("#map_success").html('Search Completed.').slideDown( 'slow' );
+					} );
+				})
+			});
+		
+		} );
 });
 
 </script>
 {% endblock %}
 
 {% block main %}
-<div id="received">Gonna</div>
+<div id="received" ></div>
 <div id="map_canvas" ></div>
+<div id="map_success" class="alert-message success hidden"></div>
+<div id="map_working"  class="alert-message info hidden "></div>
+<div id="map_error"  class="alert-message error hidden"></div>
 
     {% for event in events %}
 		{% include "event_snip.htm" %}

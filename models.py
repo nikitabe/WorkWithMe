@@ -19,11 +19,18 @@ GEOBOX_CONFIGS = (
 class CUser( db.Model ):
 	username = db.StringProperty()
 	email 	 = db.EmailProperty()
+
 	def user_id( self ):
 		return self.key()
 		
-	def get_events( self ):
-		return Event.all().ancestor( self ).fetch(100)
+	def get_events( self, history ):
+		q = Event.all().ancestor( self )
+		if not history:
+			q.filter( "when_end >=", datetime.now() )
+		else:
+			q.filter( "when_end <", datetime.now() )
+		q.order( "-when_end" )
+		return q.fetch(100)
 
 def get_current_user():
 	user = users.get_current_user()
@@ -43,31 +50,22 @@ def get_user_by_user_id( user_id ):
 def get_user_by_username( username ):
 	return CUser.all().filter( "username = ", username ).get()
 
-# Let's define the data model first
-class Event(db.Model):
-	who_user        = db.UserProperty()
-	who_name        = db.StringProperty(multiline=False)
-	what            = db.StringProperty(multiline=True)
-	when_start      = db.DateTimeProperty(auto_now_add=False)
-	when_end        = db.DateTimeProperty(auto_now_add=False)
-	when_created    = db.DateTimeProperty(auto_now_add=True)
-	skill           = db.StringProperty(multiline=False)
-	skill_neighbor  = db.StringProperty(multiline=False)
-	where_loc       = db.GeoPtProperty()
-	where_loc_lat   = db.FloatProperty()
-	where_loc_lng   = db.FloatProperty()
-	where_name		= db.StringProperty(multiline=False)
-	where_addr		= db.StringProperty(multiline=True)
-	where_detail 	= db.StringProperty(multiline=True)
-	geoboxes		= db.StringListProperty() # For location calculation
-	
+# Plan
+# Store my custom places in the database as well
+# Perhaps only store users in places rather than at their own geopoints
+
+class GeoLoc( db.Model ):
+	pt				= db.GeoPtProperty()
+	geoboxes		= db.StringListProperty()
+
 	def init_geoboxes( self ):
 		all_boxes = []
 		for( resolution, slice, use_set) in GEOBOX_CONFIGS:
 			if use_set:
-				all_boxes.extend( geobox.compute_set( self.where_loc_lat, self.where_loc_lng, resolution, slice ) )
+				all_boxes.extend( geobox.compute_set( self.pt.lat, self.pt.lon, resolution, slice ) )
 			else:
-				all_boxes.append( geobox.compute( float( self.where_loc_lat), float(self.where_loc_lng), resolution, slice ) )
+				# Check - why do we need to cast to float?
+				all_boxes.append( geobox.compute( float( self.pt.lat), float(self.pt.lon), resolution, slice ) )
 
 		self.geoboxes = all_boxes
 
@@ -88,7 +86,7 @@ class Event(db.Model):
 			query.filter( "geoboxes =", box )
 			if t != None:
 				# logging.info( "datetime: " + t.strftime("%A, %d. %B %Y %I:%M%p") )
-				query.filter( "when_start <=", t )
+				query.filter( "when_end >=", t )
 			results = query.fetch( 50 );
 			# logging.info("Found %d results", len(results))
 			for result in results:
@@ -97,7 +95,7 @@ class Event(db.Model):
 		
 		events_by_distance = []
 		for event in found_events.itervalues():
-			distance = geobox.earth_distance( lat, lng, event.where_loc_lat, event.where_loc_lng )
+			distance = geobox.earth_distance( lat, lng, event.pt.lat, event.pt.lon )
 			events_by_distance.append((distance, event))
 		
 		events_by_distance.sort()
@@ -115,6 +113,32 @@ class Event(db.Model):
 	@classmethod
 	def queryArea( self, lat_lo, lng_lo, lat_hi, lng_hi, t = None ):
 		return self.query( (lat_lo + lat_hi) / 2, (lng_lo + lng_hi) / 2, 10, (2,0), t)
+
+	
+class Place( GeoLoc ):
+	name 			= db.StringProperty( multiline=False )
+
+# Let's define the data model first
+class Event( GeoLoc ):
+	user        	= db.ReferenceProperty( CUser, collection_name="users")
+	who_name        = db.StringProperty(multiline=False)
+	what            = db.StringProperty(multiline=True)
+	when_start      = db.DateTimeProperty(auto_now_add=False)
+	when_end        = db.DateTimeProperty(auto_now_add=False)
+	when_created    = db.DateTimeProperty(auto_now_add=True)
+	skill           = db.StringProperty(multiline=False)
+	skill_neighbor  = db.StringProperty(multiline=False)
+	
+	# This is now GeoLoc.pt - adjust all code accordingly
+	where_loc       = db.GeoPtProperty()
+	where_loc_lat   = db.FloatProperty()
+	where_loc_lng   = db.FloatProperty()
+	
+	where_name		= db.StringProperty(multiline=False)
+	where_addr		= db.StringProperty(multiline=True)
+	where_detail 	= db.StringProperty(multiline=True)
+	place			= db.ReferenceProperty( Place, collection_name="places")
+	
 		
 
 def output_events():

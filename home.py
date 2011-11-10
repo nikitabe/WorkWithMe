@@ -15,6 +15,11 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 
 class MyPage( webapp.RequestHandler ):
+	def FirstInit(self):
+		user = models.get_current_user()
+		if user and user.username == None:
+			self.redirect( "/profile")
+		
 
 	def AddUserInfo(self, template_vars):
 		user = models.get_current_user()
@@ -23,13 +28,16 @@ class MyPage( webapp.RequestHandler ):
 			user_str = ""
 			if user.username:
 				user_str = " " + user.username
-			greeting = "<ul><li><a href='%s'> Log Out</a></li></ul>" % (users.create_logout_url( self.request.uri ) )
+			if user.username == None:
+				user.username = ""
+				user.put()
+			greeting = "<li><a href='%s'> Log Out</a></li>" % (users.create_logout_url( self.request.uri ) )
 			template_vars.update( {
 				"username":user.username,
 				"user":user
 			})
 		else:
-			greeting = "<ul><li><a href='%s'>Log In</a></li></ul>" % users.create_login_url( self.request.uri )
+			greeting = "<li><a href='%s'>Log In</a></li>" % users.create_login_url( self.request.uri )
 
 		template_vars.update( {
 			"greeting":greeting
@@ -38,6 +46,7 @@ class MyPage( webapp.RequestHandler ):
 	
 class Home( MyPage ):
     def get( self ):
+		self.FirstInit()
 		template_values = {}
 		self.AddUserInfo( template_values )
 		path = os.path.join( os.path.dirname(__file__), 'templates/index.htm' )
@@ -59,8 +68,8 @@ def PrepItemTemplate( items ):
 class Browse( MyPage ):
 	
 	def get( self ):
-		events = db.GqlQuery( "SELECT * "
-								"FROM Event" ).fetch(50)
+		self.FirstInit()
+		events = models.Event.all().filter( "when_end >=", datetime.now()).fetch( 50 )
 		PrepItemTemplate( events )
 		template_values = {'events':events, 'show_link':1}
 		self.AddUserInfo( template_values )
@@ -75,7 +84,20 @@ def fixDate( str ):
 
 class Add_event( MyPage ):
 	def get( self ):
+		self.FirstInit()
 		template_values = {}
+
+
+		user = models.get_current_user()
+		if user:
+			old_event = models.Event.all().filter( "user =", user.key()).order( "when_end").get()
+			if old_event:
+				logging.info( "hello" )
+				template_values.update( {
+					"old_event":old_event
+					})		
+		
+		
 		self.AddUserInfo( template_values )
 		path = os.path.join( os.path.dirname(__file__), 'templates/add_event.htm' )
 		self.response.out.write( template.render( path, template_values ))
@@ -85,16 +107,18 @@ class Add_event( MyPage ):
 		if len( n ) == 0:
 			self.response.out.write( 'Please enter your name' )
 			return
-
-		existing_user = models.get_user_by_username( n )
-		if existing_user:
-			self.response.out.write( 'A user with this username already exists' )
-			return
-			
 					
 		user = models.get_current_user()
-		
+
 		event = models.Event( parent = user )
+		
+		if user:
+			event.user = user
+			old_event = models.Event.all().ancestor( user ).filter( "when_end >=", datetime.now() ).get()
+			if old_event:
+				old_event.when_end = datetime.now()
+				old_event.put()
+		
 		event.who_name      = self.request.get('who_name')
 		event.what          = self.request.get('what')
 		event.when_start    = fixDate( self.request.get('when_start' ) )
@@ -107,15 +131,12 @@ class Add_event( MyPage ):
 		event.where_detail  = self.request.get('where_detail')
 
 		if self.request.get( 'loc_geopt_lat' ) and self.request.get( 'loc_geopt_lng' ):
-		    event.where_loc = db.GeoPt( self.request.get( 'loc_geopt_lat' ), self.request.get( 'loc_geopt_lng' ) )
-		    event.where_loc_lat   = float( self.request.get( 'loc_geopt_lat' ) )
-		    event.where_loc_lng   = float( self.request.get( 'loc_geopt_lng' ) )
+		    event.pt = db.GeoPt( self.request.get( 'loc_geopt_lat' ), self.request.get( 'loc_geopt_lng' ) )
 
 		event.init_geoboxes()
 		event.put()
 		
-		# self.response.out.write( 'Event Added' )
-		self.redirect( '/user/%s' % user.username )
+		self.response.out.write( 'OK' )
         
         # Add the information that was submitted	
         
@@ -145,15 +166,15 @@ class GetItems( webapp.RequestHandler ):
 					'skill': e_obj.skill,          
 					'skill_neighbor': e_obj.skill_neighbor, 
 					# 'where_loc': e_obj.where_loc,      
-					'where_loc_lat': e_obj.where_loc_lat,  
-					'where_loc_lng': e_obj.where_loc_lng,  
+					'where_loc_lat': e_obj.pt.lat,  
+					'where_loc_lng': e_obj.pt.lon,  
 					'where_name': e_obj.where_name,	
 					'where_addr': e_obj.where_addr,	
 					'where_detail': e_obj.where_detail,   					
 			}
 			
 			
-			k = "%s|%s" % (e_obj.where_loc_lat, e_obj.where_loc_lng)
+			k = "%s|%s" % (e_obj.pt.lat, e_obj.pt.lon)
 			
 			right_list = locations.get( k )
 			if right_list:
@@ -172,15 +193,24 @@ class GetItems( webapp.RequestHandler ):
 
 		self.response.out.write( output + " " )
 
+# To do: require login
 class Profile( MyPage ):
 	def get( self ):
+		# Get the last event and set default values for it here
 		template_values = {}
 		self.AddUserInfo( template_values )
 		path = os.path.join( os.path.dirname(__file__), 'templates/profile.htm' )
 		self.response.out.write( template.render( path, template_values ))
 	def post( self ):
 		user = models.get_current_user()
-		user.username = self.request.get( "username" )
+		un = self.request.get( "username" )
+		
+		existing_user = models.get_user_by_username( un )
+		if existing_user and  (existing_user.user_id() != user.user_id()):
+			self.response.out.write( 'A user with this username already exists' )
+			return
+
+		user.username = un
 		user.put()
 		self.response.out.write( "Update complete" )
 
@@ -188,6 +218,7 @@ class Profile( MyPage ):
 
 class EventHandler( MyPage ):
 	def get( self, event_id ):
+		self.FirstInit()
 		# implement getting the item according to an id
 		logging.info( "input: %s" % event_id)
 		event = models.get_event( long( event_id ) )
@@ -198,15 +229,48 @@ class EventHandler( MyPage ):
 		self.AddUserInfo( template_values )
 		path = os.path.join( os.path.dirname(__file__), 'templates/event.htm' )
 		self.response.out.write( template.render( path, template_values ))
+		
 
 class UserHandler( MyPage ):
 	def get( self, username ):
-		user = models.get_user_by_username( username )
-		events = user.get_events()
-		template_values = { 'user':user, 'events':events } 
+		self.FirstInit()
+		logging.info( "username: " + username)
+		user_to_view = models.get_user_by_username( username )
+		events = user_to_view.get_events( False )
+		old_events = user_to_view.get_events( True )
+		
+		user_is_me = False
+
+		user = models.get_current_user()
+		if user and user_to_view.user_id() == user.user_id():
+			user_is_me = True
+			
+		template_values = { 'user_to_view':user_to_view, 'events':events, 'old_events':old_events, 'user_is_me':user_is_me } 
 		self.AddUserInfo( template_values )
 		path = os.path.join( os.path.dirname( __file__ ), 'templates/user.htm')
-		self.response.out.write( template.render( path, template_values ))		
+		self.response.out.write( template.render( path, template_values ))	
+	def post( self, username, action ):
+		if action == "closeout":
+			user = models.get_current_user()
+			target_user = models.get_user_by_username( username )
+			if user.user_id() != target_user.user_id():
+				self.response.out.write( "You ain't got no right!")
+				return False
+			
+			if user:
+				events = models.Event.all().ancestor( target_user ).filter( "when_end >=", datetime.now() ).fetch(50)
+				for event in events:
+					event.when_end = datetime.now()
+					event.put()
+		self.redirect( "/user/" + username )
+
+class LocationHandler( MyPage ):
+	def get( self, lng, lat, place_name ):
+		template_values = {} 
+		self.AddUserInfo( template_values )
+		path = os.path.join( os.path.dirname( __file__ ), 'templates/location.htm')
+		self.response.out.write( template.render( path, template_values ))	
+					
 		
 class ComingSoon( webapp.RequestHandler ):
 	def get( self ):
@@ -223,6 +287,9 @@ def main():
 									  ('/home', Home ),
 									  ('/get_items', GetItems ),
 									  ('/profile', Profile ),
+									  ('/place/(.*)/(.*)', LocationHandler ),
+									  ('/place/(.*)/(.*)/(.*)', LocationHandler ),
+									  ('/user/(.*)/(.*)', UserHandler),
 									  ('/user/(.*)', UserHandler)
                                       ], debug=True )
 	util.run_wsgi_app( application )

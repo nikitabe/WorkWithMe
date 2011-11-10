@@ -69,6 +69,7 @@
 
     </style>
 
+
     <!--
     <link rel="shortcut icon" href="/images/favicon.ico">
     <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
@@ -100,28 +101,35 @@
         <div class="container">
           <a class="brand" href="/">WorkWithMe</a>
           <ul class="nav">
+			<li id="nav_post"><a href="/add">Post</a></li>
+			<li id="nav_browse"><a href="/browse">Browse</a></li>
+			{% if user %}
+			<li id="nav_me"><a href='/user/{{username}}'>Me</a></li>
+			{% endif %}
+			
+	
 			{% block nav%}
 			{% endblock %}
           </ul>
-		  <div class="pull-right">
+		  <ul class="nav secondary-nav">
 			{% if user%}
-			<ul>
-				<li id="profile_button">
+				<li>
 					<a href="/profile">Profile</a>
 				</li>
-			</ul>
 			{% endif %}
 			{{ greeting }}
-		  </div>
+		  </ul>
         </div>
       </div>
     </div>
+
 
     <div class="container">
 
       <div class="content">
         <div class="page-header">
-          <h1>Whachadoin?<br/><small>Tell the world what, where, and when you're up to.</small></h1>
+			{% block header %}
+			{% endblock %}
         </div>
         <div class="row">
           <div class="span10">

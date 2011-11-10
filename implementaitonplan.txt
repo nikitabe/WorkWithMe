@@ -1,7 +1,8 @@
-Workflows:
+Plan:
 
-- come to page
-- identify where you are, what you are working on, etc.
-- log in (?)
-- 
 
+change the z-order for my location to always be under
+
+
+Once with internet:
+add_event.js - verify forwarding
