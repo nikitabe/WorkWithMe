@@ -1,0 +1,27 @@
+{% extends "base.htm" %}
+
+{% block nav%}
+	<li id="nav_user" class="active"><a href="#">Place</a></li>
+{% endblock %}
+
+{% block head %}
+<script type="text/javascript">
+</script>
+{% endblock %}
+
+{% block header %}
+	<h1>{{place.place_name}}</h1>
+{% endblock %}
+
+{% block main %}
+
+{% if events %}
+	<h2>At this place we have:</h2>
+	{% for event in events %}
+		{% include "event_snip.htm" %}
+	{% endfor %}
+{% else %}
+	There is nobody here at the moment.
+{% endif %}
+
+{% endblock %}

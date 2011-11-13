@@ -18,11 +18,16 @@ $(function(){
 {% endblock %}
 
 {% block header %}
-	<h1>{{user_to_view.username}}</h1>
+	{% if user_to_view %}
+		<h1>{{user_to_view.username}}</h1>
+	{% else %}
+		User does not exist.
+	{% endif %}	
 {% endblock %}
 
 {% block main %}
-<div class="alert-message block-message success">
+{% if user_to_view %}
+	<div class="alert-message block-message success">
 		{% if events %}
 			{% for event in events %}
 				{% include "event_snip.htm" %}
@@ -48,5 +53,5 @@ $(function(){
 	{% for event in old_events %}
 		{% include "event_snip.htm" %}
 	{% endfor %}
-	
+{% endif %}
 {% endblock %}

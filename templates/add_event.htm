@@ -55,7 +55,23 @@
 			});		
 	}
 	
-	$(function () {
+	function addTestAddress()
+	{
+		$('#where_name').val( 'Test place' );
+		$('#where_addr').val( 'Test address' );
+		$('#loc_geopt_lat').val( '1' );
+		$('#loc_geopt_lng').val( '2' );
+
+	}
+	
+	function displayDate()
+	{
+		var d_s = Date.parse( $( "#when_end" ).val() );
+		$('#out_str').html( d_s.toString() );
+
+	}
+	
+	$(function () {		
 		$("#nav_post").addClass( "active");
 		init_add_event();
 		
@@ -138,18 +154,18 @@
 		<button data-controls-modal="map-overlay" data-backdrop="true" data-keyboard="true" class="btn find_loc_btn">Find Location</button>
 
 		<div class="address_box well">
-			<input type="text" class="wide place_name" id="where_name" name="where_name" value="{{old_event.where_name}}" readonly />
+			<input type="text" class="wide place_name" id="where_name" name="where_name" value="{{old_event.place.place_name}}" readonly />
 	    	<br/>
 			<input type="text" class="wide place_address" id="where_addr" name="where_addr" value="{{old_event.where_addr}}" readonly/>
 			<div id="address_box_error" class="hide alert-message error" style="margin-bottom:0"></div>
 		</div>
 
 	</div>
-	
+
 	<div class="step">
 	    I'll be <input type="text" class="wide" id="where_detail" name="where_detail" placeholder="stuck between a piano and a barista" value="{{old_event.where_detail}}" />.
-		<input type="hidden" id="loc_geopt_lat" name="loc_geopt_lat" value="{{old_event.where_loc_lat}}"></input>
-		<input type="hidden" id="loc_geopt_lng" name="loc_geopt_lng" value="{{old_event.where_loc_lng}}"></input>
+		<input type="hidden" id="loc_geopt_lat" name="loc_geopt_lat" value="{{old_event.lat}}"></input>
+		<input type="hidden" id="loc_geopt_lng" name="loc_geopt_lng" value="{{old_event.lon}}"></input>
 		<input type="hidden" id="username" name="username" value="{{username}}"></input>
 	</div>
 
@@ -162,7 +178,7 @@
 	I'll be there from now 
     <input type="hidden" id="when_start" name="when_start" value='now' placeholder="start time"></input>
     until
-    <input type="text" id="when_end" name="when_end" ></input>
+    <input type="text" id="when_end" name="when_end" placeholder="1pm"></input>
     .
 	</div>
 	<div id="when_end_error" class="hide alert-message error"></div>

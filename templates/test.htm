@@ -1,0 +1,39 @@
+{% extends "base.htm" %}
+
+
+{% block nav%}
+{% endblock %}
+
+{% block header %}
+<h1>What are you up to?</h1>
+{% endblock %}
+
+
+{% block head %}
+	<script type="text/javascript" src="/JS/date.js"></script>
+    <script type="text/javascript">
+
+	$(function () {		
+		$("#run_test").click( function(){
+			
+			var v = $('#in').val();
+			var d_s = Date.parse( v );
+			$('#out').html( d_s.toString() );
+		});
+		
+	});
+
+	</script>
+{% endblock %}
+
+{% block right_col %}
+<h3>Thasssright!'</h3>
+{% endblock %}
+
+{% block main %}
+<input type="text" id="in" value="now"></input>
+<button id="run_test" class="btn">Go</button>
+<div id="out"></div>
+
+
+{% endblock %}
