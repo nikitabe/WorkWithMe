@@ -11,10 +11,14 @@ var map,
     // defaultTypes = 'store gym cafe food bar street_address point_of_interest administrative_area_level_1 administrative_area_level_2 administrative_area_level_3 colloquial_area country floor intersection locality natural_feature neighborhood political point_of_interest post_box postal_code postal_code_prefix postal_town premise room route street_address street_number sublocality sublocality_level_4 sublocality_level_5 sublocality_level_3 sublocality_level_2 sublocality_level_1 subpremise transit_station'.split(" "),
     defaultTypes = 'store gym cafe food bar street_address point_of_interest floor intersection natural_feature point_of_interest post_box premise room street_address street_number subpremise transit_station'.split(" "),
 	map_fields = 'loc_geopt_lat loc_geopt_lng where_name where_addr where_detail'.split(" "),
+	div_statuses = 'working error success'.split(" "),
+	
 	default_zoom = 15;
+	
+var ADD_MARKER = true,
+	NO_MARKER = false;
 
-
-function init_map_stuff ( complete_func ) {
+function init_map_stuff () {
     var pi0 = new google.maps.LatLng(0, 0);
     
     map = new google.maps.Map(document.getElementById('map_canvas'), {
@@ -24,9 +28,6 @@ function init_map_stuff ( complete_func ) {
         });
     infowindow = new google.maps.InfoWindow();
     geocoder = new google.maps.Geocoder();
-    init_btn_act();
-	complete_func();
-
 }
 
 function init_btn_act() {
@@ -40,35 +41,80 @@ function init_btn_act() {
 	});
 }
 
-function searchFnc() {
-	$("#map_working").html( 'Looking, searching, digging...').slideDown( 'fast');
-	$("#map_error").slideUp( 'fast');
-	$("#map_success").slideUp( 'fast' );
-	
-    var sTxt = $("#where").val();
-    $("#searchResults").html("");
-    if (sTxt.length<0) {
-        $("#searchResults").html("Type at least 0 chars.>");
-        $("#searchResults").slideDown( 'slow');
-    } else {
-		var map_bounds = map.getBounds();
-        var placeApi = new google.maps.places.PlacesService(map);
-        var searchRequest = {
-            name: sTxt,
-            types: defaultTypes,
-			bounds: map_bounds
-			};
-        placeApi.search(searchRequest, procAddrSearchResponse);
-    }
+// Sets the current status sliding down the right panel
+function setStatus( type, status_str, function_name, complete_func )
+{
+	console.log( "setting status to: " + type + ": " + status_str + " in " + function_name )
+	$("#map_working").slideUp( 'fast', function(){
+		$("#map_success").slideUp( 'fast', function(){
+			$("#map_error").slideUp( 'fast', function(){
+				$("#map_" + type ).html( status_str ).slideDown( 'slow', function(){
+					if( complete_func ) complete_func();
+					} );
+			});
+		});
+	});
 }
 
+// Attempts to center the map on an address
+function centerOnAddress( address_txt, complete_func )
+{
+	setStatus( "working", "Digging around... ", "centerOnAddress", function(){
+	    geocoder.geocode( { 'address': address_txt }, function(results, stat) {
+	    	if (stat == google.maps.GeocoderStatus.OK) {
+			
+				var p = results[0];
+				
+				map.setCenter(p.geometry.location);
+				myLocMarker = addAddressMarker( p, "I am here" );
+				myLoc = p.geometry.location;
+				
+				if( map.getZoom() > default_zoom ) 
+					map.setZoom( default_zoom );
 
-function procAddrSearchResponse( r, s ){
-	if( !procSearchResponse( r, s ) )
-		find_location_via_address( $("#where").val() );
+				setStatus( "success", 'Found this address.', "centerOnAddress" );
+				complete_func();
+			} else {
+				setStatus( "error", 'Sorry, nothing found.', "centerOnAddress"  );
+			}
+	    });	
+	} );	
 }
 
-function procSearchResponse(r,s) {
+// Single_item means that we are looking for one item rather than a list
+function searchFnc( complete_func, single_item ) {
+	setStatus( "working", 'Looking, searching, digging...', "searchFnc", function(){
+				
+	    $("#searchResults").html("");
+
+	    var sTxt = $("#where").val();
+	    if (sTxt.length<0) {
+	        $("#searchResults").html("Type at least 0 chars.>");
+	        $("#searchResults").slideDown( 'slow');
+	    } else {
+			attemptFindViaPlace( sTxt );
+	    }
+		
+	} );
+
+}
+
+function attemptFindViaPlace( sTxt, complete_func, error_func )
+{
+	var map_bounds = map.getBounds();
+    var placeApi = new google.maps.places.PlacesService(map);
+    var searchRequest = {
+        name: sTxt,
+        types: defaultTypes,
+		bounds: map_bounds
+		};
+    placeApi.search(searchRequest, function( r, s ){
+			if( !procPlaceSearchResponse( r, s ) )
+				if( error_func ) error_func();
+		});
+}
+
+function procPlaceSearchResponse( r, s ){
     placesList = [];
     cleanMarkerList();
     markersList = [];
@@ -76,76 +122,88 @@ function procSearchResponse(r,s) {
     var dBounds = new google.maps.LatLngBounds();
     if (s == google.maps.places.PlacesServiceStatus.OK) {
         for (var i = 0; i < r.length; i++) {
-            var place = r[i];
-            placesList.push(place);
-            createMarker(r[i]); 
+            var p = r[i];
+			var placeLoc =  p.geometry.location;
+            placesList.push(p);
             
-            var pName = r[i].name;
-            var pType  = r[i].types[0];
-            var pid    = r[i].id;
-            var pVicinity = r[i].vicinity;
+            var pName = p.name;
+            var pType  = p.types[0];
+            var pid    = p.id;
+            var pVicinity = p.vicinity;
             var address = pName + " " + pVicinity;
             var extAddress = pType +": "+ address;
-            pStore += "<li>" + pickMeStr( place.geometry.location.lat(), place.geometry.location.lng(), pName, pVicinity ) + "<a href='#"+address+"' class='address' onclick=\"showOnlyPlace('"+i+"');\">"+extAddress+"</a></li>";
-            dBounds.extend(place.geometry.location);
+			var title_str = pickMeStr( placeLoc.lat(), placeLoc.lng(), pName, pVicinity ) + "<a href='#"+address+"' class='address' onclick=\"showOnlyPlace('"+i+"');\">"+extAddress+"</a>";
+            var info_box_str = p.types[0] + ": " +p.name + ", " + p.vicinity + "<br/>" + pickMeStr( placeLoc.lat(), placeLoc.lng(), p.name, p.vicinity );
 
+			pStore += "<li>" + title_str + "</li>";
+            
+			createMarker( p, info_box_str );
+			// dBounds.extend( placeLoc );
         }
-        map.fitBounds(dBounds);
+        // map.fitBounds(dBounds);
 
 		if( map.getZoom() > default_zoom ){
 			map.setZoom( default_zoom );
 		}
         $("#searchResults").html("<ul>"+pStore+"</ul>");
 
-		$("#map_working").slideUp( 'fast');
-		$("#map_error").slideUp( 'fast');
-		$("#map_success").html( 'Found some places. Please select the one where you are at.' ).slideDown( 'slow' );
 
 		$("#searchResults").slideDown( 'slow');	
-		return true;	
+		setStatus( "success", "Found some places.  Please select the one where you are at.", "procPlaceSearchResponse" );
     } else {
-		return false;
+		find_location_via_address( $("#where").val(), ADD_MARKER );
     }
 }
 
-function  find_location_via_address( address_txt )
+function handle_found_place( place )
+{
+    createMarker( place ); 	
+}
+
+function addAddressMarker(r_item) {
+
+	var addr = r_item.formatted_address; 
+	 
+	var marker = new google.maps.Marker({
+		map: map,
+		position: r_item.geometry.location,
+		zIndex: 1
+	});
+
+	markersList.push({marker:marker, place: r_item });
+	google.maps.event.addListener(marker, 'click', function(marker) {
+		infowindow.setContent( addr + "<br/>" + pickMeStr( this.getPosition().lat(), this.getPosition().lng(), "", addr ) );
+		infowindow.open(map, this);
+	});
+	
+	pStore = pickMeStr( marker.getPosition().lat(), marker.getPosition().lng(), "", addr ) + "<a href='#"+addr+"' onclick=\"showOnlyPlace('"+ (markersList.length-1) +"');\">"+addr+"</a>";
+
+	// This is probably wrong.  Selector should be UL under #searchResults
+	$( "#searchResults ul" ).append( $( "li" ).val( pStore) );
+
+	return marker;
+}
+
+function find_location_via_address( address_txt, add_address_marker, found_item_func )
 {
     geocoder.geocode( { 'address': address_txt }, function(results, stat) {
-	    var pStore = "";
 	    var dBounds = new google.maps.LatLngBounds();
     	if (stat == google.maps.GeocoderStatus.OK) {
 			for(var j=0; j<results.length; j++) {
-				(function (results, j) {
-					var addr = results[j].formatted_address;  
-					map.setCenter(results[j].geometry.location);
-					var marker = new google.maps.Marker({
-						map: map,
-						position: results[j].geometry.location,
-						zIndex: 1
-					});
-
-					markersList.push({marker:marker, place: results[j]});
-					google.maps.event.addListener(marker, 'click', function(marker) {
-						infowindow.setContent( addr + "<br/>" + pickMeStr( this.getPosition().lat(), this.getPosition().lng(), "", addr ) );
-						infowindow.open(map, this);
-					});
-					pStore += "<li>" + pickMeStr( marker.getPosition().lat(), marker.getPosition().lng(), "", addr ) + "<a href='#"+addr+"' onclick=\"showOnlyPlace('"+j+"');\">"+addr+"</a></li>";
-					dBounds.extend(results[j].geometry.location);
-				})(results, j); //end fnc
+				if( add_address_marker )
+					addAddressMarker( results[j], found_item_func );
+				if( results.length > 0 )
+					map.setCenter(results[0].geometry.location);
 			}
 			map.fitBounds(dBounds);
 			if( map.getZoom() > default_zoom ){
 				map.setZoom( default_zoom );
 			}
-			$("#searchResults").html("<ul>"+pStore+"</ul>");
 			$("#searchResults").slideDown( 'slow');				
-			$("#map_working").slideUp( 'fast');
-	    	$("#map_success").html( 'Found this address.' ).slideDown( "slow" );
+			setStatus( "success", 'Found this address.', "find_location_via_address" );
 		} else {
 			$("#searchResults").slideUp( 'fast');
-			$("#map_success").slideUp( 'fast');
-			$("#map_working").slideUp( 'fast');
-			$("#map_error").html('Sorry, nothing found.').slideDown( 'slow');
+			setStatus( "error", 'Sorry, nothing found.', "find_location_via_address" );
 		}
     });	
 }
@@ -155,25 +213,8 @@ function pickMeStr( lat, lng, name, addr )
 	return " <div class='btn' onclick=\"setMyPositionTo(" + lat + "," + lng + ", '" + escape(name) + "', '" + escape(addr) + "')\">I am here</div>";
 }
 
-function createEventMarker( lat, lng, message  )
-{
-	var spot = new google.maps.LatLng( lat, lng );
-    var marker = new google.maps.Marker({
-            map: map,
-            position: spot,
-			zIndex: 1
-    });
 
-    markersList.push({marker:marker});
-    google.maps.event.addListener(marker, 'click', function( marker ) {
-        infowindow.setContent( message );
-        infowindow.open(map, this);
-    });
-	console.log( "creating marker!");
-	return marker;	
-}
-
-function createMarker(p) {
+function createMarker(p, msg) {
     var placeLoc = p.geometry.location;
     var marker = new google.maps.Marker({
                     map: map,
@@ -183,7 +224,7 @@ function createMarker(p) {
     markersList.push({marker: marker, place: p} );     
     google.maps.event.addListener(marker, 'click', 
             function() {
-                infowindow.setContent(p.types[0] + ": " +p.name + ", " + p.vicinity + "<br/>" + pickMeStr( placeLoc.lat(), placeLoc.lng(), p.name, p.vicinity ) );
+                infowindow.setContent( msg );
                 infowindow.open(map, this);
             });
 }
@@ -218,24 +259,18 @@ function showOnlyPlace(pid) {
 }
 
 function findMeFnc( complete_func ) {
-	$("#map_working").html( 'Looking for you...').slideDown( 'slow');
-	$("#map_error").slideUp( 'fast');
-	$("#map_success").slideUp( 'fast');
-
-	clearMyLocMarker();
-    if (navigator &&
-            (ng = navigator.geolocation) &&
-            ng.getCurrentPosition) {
-        ng.getCurrentPosition( function( pos ){ 
-								locFoundYou( pos, complete_func );
-							   }, locNoFoundYou);
-	} else {
-		$("#map_working").slideUp( 'fast', function(){
-        	$("#map_error").html("<h3>Your browser does not support geolocation.  <button class='btn' name='findMeBtn'' id='findMeBtn' value='Find Me'>Try Again!</button></h3>");
-			$("#map_error").slideDown( 'slow');
-		});
-    }
-
+	setStatus( "working", 'Looking for you...', "findMeFnc", function(){
+		clearMyLocMarker();
+	    if (navigator &&
+	            (ng = navigator.geolocation) &&
+	            ng.getCurrentPosition) {
+	        ng.getCurrentPosition( function( pos ){ 
+									locFoundYou( pos, complete_func );
+								   }, locNoFoundYou);
+		} else {
+			setStatus( "error", "<h3>Your browser does not support geolocation.  <button class='btn' name='findMeBtn'' id='findMeBtn' value='Find Me'>Try Again!</button></h3>", "findMeFnc" );
+	    }
+	});
 }
 
 function setMyPositionTo( lat, lng, where_name, where_addr )
@@ -263,13 +298,6 @@ function copy_val( destination, source_prefix, dest_prefix )
 	$( "#" + dest_prefix + destination ).val( $("#" + source_prefix + destination).val() );
 }
 
-function initMyExistingPosition()
-{
-	findMeFnc( function(){
-		console.log( "Found");
-	});
-}
-
 function applyMyNewPosition()
 {	
 	for( var i in map_fields )
@@ -280,7 +308,7 @@ function applyMyNewPosition()
 function locFoundYou( pos, complete_func ) {
 	console.log( "in logFound " + Math.random());
 	$("#map_working").slideUp( 'fast', function(){
-    	$("#map_working").html("Found your coordinates. Now looking for your location.").slideDown( "slow" );
+    	$("#map_working").html("Found your coordinates.").slideDown( "slow" );
 	    var lat = pos.coords.latitude;
 	    var lng = pos.coords.longitude;
 
@@ -290,27 +318,26 @@ function locFoundYou( pos, complete_func ) {
 	    map.setZoom(default_zoom);
 
 		addMyMarker( myLoc, "I am here!", complete_func );
-		complete_func();
-
 	});
 }
 
-function findPlacesNear( loc, complete_func )
+function findPlacesNear( loc )
 {
 	// Can we find a place based on this location?
+	var map_bounds = map.getBounds();
     var placeApi = new google.maps.places.PlacesService(map);
     var searchRequest = {
-        location: loc,
-        radius: 50,
+        // location: loc,
+        // radius: 50,
+		bounds: map_bounds,
         types: defaultTypes
 	};
     placeApi.search(searchRequest, function( r, s ){
-    	$("#map_working").slideUp( 'fast', function(){
-			$("#map_success").html("Did I find you?").slideDown( "slow" );
-		
-			procSearchResponse( r, s );
-			console.log( "in logFound " + Math.random());
-
+		setStatus( "success", "Did I find you?", "findPlacesNear", function(){
+			console.log( "findPlacesNear - loc " +  loc);
+			console.log( "findPlacesNear - loc " +  defaultTypes );
+			console.log( "findPlacesNear - found " +  r.length + " items");
+			procPlaceSearchResponse( r, s );
 		});
 	});	
 }

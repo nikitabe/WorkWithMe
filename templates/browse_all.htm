@@ -25,11 +25,28 @@
 
 var count = 1;
 
-function findItems( completed_func ){
-	$("#map_success").slideUp( 'fast' );
-	$("#map_error").slideUp( 'fast', function(){
-		$("#map_working").html( "Working..." ).slideDown( 'slow' );
-	});
+function createEventMarker( lat, lng, message  )
+{
+	var spot = new google.maps.LatLng( lat, lng );
+    var marker = new google.maps.Marker({
+            map: map,
+            position: spot,
+			zIndex: 1
+    });
+
+    markersList.push({marker:marker});
+    google.maps.event.addListener(marker, 'click', function( marker ) {
+        infowindow.setContent( message );
+        infowindow.open(map, this);
+    });
+	console.log( "creating marker!");
+	return marker;	
+}
+
+// This function tries to find everyone on the current map
+// and places them on the map
+function findItems(){
+	setStatus( "working", "Working...", "findItems", function(){
 
 	var bounds = map.getBounds();
 	// Make the AJAX call to get the items within bounds
@@ -37,15 +54,12 @@ function findItems( completed_func ){
 				url: "/get_items?bounds=" + bounds.toUrlValue() + '&json=1', 
 				dataType: 'json',
 				error: function(jqXHR, textStatus, errorThrown){
-					$("#map_working").slideUp( 'fast', function(){
-							$("#map_error").html( "There was an error: " + jqXHR + ", " + textStatus + ", "+ errorThrown ).slideDown( 'slow' );
-						} );
+						setStatus( "error", "There was an error: " + jqXHR + ", " + textStatus + ", "+ errorThrown, "findItems" );
 					},
 				success: function( items_json ){
 					//$("#received").html( "he: " + items_json );
 					cleanMarkerList();
 					var locations = eval( items_json );
-					
 					
 					for( var loc in locations ){
 						
@@ -56,25 +70,40 @@ function findItems( completed_func ){
 								"<div class='map_info_place_name'>" + items[0].where_name +  "</div>" + 
 								"<div class='map_info_address'>" + items[0].where_addr + "</div>");
 					} 
-					completed_func();
-					
+					setStatus( "success", "Search Completed", "findItems" );
 				} 
 			});
-	
+	} );
 }
 
+// Finds the address and deploys the pin around that location.
+function browseSearch()
+{
+	var sTxt = $("#where").val();
+	centerOnAddress( sTxt, findItems );
+}
+
+// Finds my location, then finds all people who are hanging out here.
+function findMeForBrowseAll()
+{
+	findMeFnc( findItems );	
+}
+
+
 $(function () {
+    $("#searchBtn").click( function () {
+        browseSearch();
+    });
+	$("#where").keydown( function(event){
+		if (event.keyCode == '13') {
+			browseSearch();
+		}
+	});
+	
 	$("#nav_browse").addClass( "active" );
-	init_map_stuff( function(){
-		findMeFnc( function(){
-			findItems( function(){
-				$("#map_working").slideUp( 'fast', function(){
-					$("#map_success").html('Search Completed.').slideDown( 'slow' );
-					} );
-				})
-			});
-		
-		} );
+	//init_btn_act();  // This is not what's needed
+	init_map_stuff();
+	findMeForBrowseAll();
 });
 
 </script>
@@ -82,14 +111,25 @@ $(function () {
 
 {% block main %}
 <div id="received" ></div>
+<div class="find_step" >
+    <input type="text" id="where" name="where" placeholder="Click to search for an address or a place..." />
+	<button class="btn" name="searchBtn" id="searchBtn" value="Search">Search</button>
+	<button class='btn' name='findMeBtn' id='findMeBtn' value='Find Me' onclick='findMeForBrowseAll()'>Find Me Again!</button>
+	<button class="btn" name="" id="" value="Test" onclick="setStatus('working', 'test')">Test</button>
+    <div id="searchResults" class="alert-message block-message info hidden"></div>
+</div>
+
 <div id="map_canvas" ></div>
-<div id="map_success" class="alert-message success hidden"></div>
-<div id="map_working"  class="alert-message info hidden "></div>
-<div id="map_error"  class="alert-message error hidden"></div>
 
     {% for event in events %}
 		{% include "event_snip.htm" %}
     {% endfor %}
     Display map
     <a href='/home'>Back</a>
+{% endblock %}
+
+{% block right_col %}
+<div id="map_success" class="alert-message hidden success"></div>
+<div id="map_working" class="alert-message hidden info"   ></div>
+<div id="map_error"   class="alert-message hidden error"  ></div>
 {% endblock %}

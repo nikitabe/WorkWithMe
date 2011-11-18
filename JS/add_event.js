@@ -1,9 +1,3 @@
-function init_add_event()
-{
-    $("#do_submit").click( do_submit );
-
-}
-
 function hide_errors()
 {
 	$( "#who_name_error" ).slideUp( 'fast' );
@@ -34,6 +28,9 @@ function do_submit(){
 	
 	if( has_error ) return false;
 	
+	d_s = Date.parse( $( "#when_start" ).val() );
+	d_e = Date.parse( $( "#when_end" ).val() );
+		
 	$.ajax({
 	  url: "/add",
 	  type: "POST",
@@ -45,17 +42,18 @@ function do_submit(){
 		where_name: $( "#where_name" ).val(),
 		where_addr: $( "#where_addr" ).val(),
 		where_detail: $( "#where_detail" ).val(),
-		when_start: $( "#when_start" ).val(),
-		when_end: $( "#when_end" ).val(),
+		when_start: d_s.toISOString(),
+		when_end: 	d_e.toISOString(),
 		skill: $( "#skill" ).val(),
 		skill_neighbor: $( "#skill_neighbor" ).val(),
 		loc_geopt_lat: $( "#loc_geopt_lat" ).val(),
 		loc_geopt_lng: $( "#loc_geopt_lng" ).val(),
 		},
 	  success: function( msg ){
-		if( msg == "OK")
+		if( msg == "OK"){
     		// $("#out_str").html( "The add went ok.  Implement redirect to /user/"  );
 			window.location.href = "/user/" + $( '#username' ).val();
+		}
 		else{
 	    		$("#out_str").html( msg );
 		}

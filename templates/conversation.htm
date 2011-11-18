@@ -1,0 +1,33 @@
+{% extends "base.htm" %}
+
+{% block nav%}
+	{% if not user_is_me %}
+		<li id="nav_conversation" class="active"><a href="#">Messaging</a></li>
+	{% endif %}
+{% endblock %}
+
+{% block head %}
+	<script type="text/javascript" src="/JS/conversation.js"></script>
+{% endblock %}
+
+{% block header %}
+	{% if user_to_view %}
+		<h1>{{user_to_view.username}}</h1>
+	{% else %}
+		User does not exist.
+	{% endif %}	
+{% endblock %}
+
+{% block main %}
+
+	{% if user_to_view %}
+	<input type="textarea" id="message"></input>
+	<button class="btn" onclick="do_send( '{{user_to_view.username}}', $('#message').val() )">Send</button>
+	<div id="out_str"></div>
+	{% endif %}
+
+{% endblock %}
+
+{% block right_col %}
+Send user a message...
+{% endblock %}

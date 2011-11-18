@@ -9,10 +9,12 @@ from django.utils import simplejson
 import models
 from google.appengine.ext import db
 from datetime import datetime
+from datetime import timedelta
 from dateutil import parser
+from datetime import tzinfo
 
+from models import tz 
 from google.appengine.ext.webapp.util import run_wsgi_app
-
 
 class MyPage( webapp.RequestHandler ):
 	def FirstInit(self):
@@ -69,7 +71,7 @@ class Browse( MyPage ):
 	
 	def get( self ):
 		self.FirstInit()
-		events = models.Event.all().filter( "when_end >=", datetime.now()).fetch( 50 )
+		events = models.Event.all().filter( "when_end >=", datetime.now( tz )).fetch( 50 )
 		PrepItemTemplate( events )
 		template_values = {'events':events, 'show_link':1}
 		self.AddUserInfo( template_values )
@@ -78,9 +80,10 @@ class Browse( MyPage ):
 
 def fixDate( str ):
     if str.lower() == "now":
-        return datetime.now()
+        return datetime.now( tz )
     else:
-        return parser.parse( str )
+		logging.info( str )
+		return parser.parse( str )
 
 class Add_event( MyPage ):
 	def get( self ):
@@ -90,9 +93,8 @@ class Add_event( MyPage ):
 
 		user = models.get_current_user()
 		if user:
-			old_event = models.Event.all().filter( "user =", user.key()).order( "when_end").get()
-			if old_event:
-				logging.info( "hello" )
+			old_event = models.Event.all().filter( "user =", user.key()).order( "-when_end").get()
+			if old_event:				
 				template_values.update( {
 					"old_event":old_event
 					})		
@@ -114,24 +116,44 @@ class Add_event( MyPage ):
 		
 		if user:
 			event.user = user
-			old_event = models.Event.all().ancestor( user ).filter( "when_end >=", datetime.now() ).get()
+			old_event = models.Event.all().ancestor( user ).filter( "when_end >=", datetime.now( tz ) ).get()
 			if old_event:
-				old_event.when_end = datetime.now()
+				old_event.when_end = datetime.now( tz )
 				old_event.put()
+		
+		logging.info( "incoming date_start: " + self.request.get('when_start' ) )
+		date_start = fixDate( self.request.get('when_start' ) )
+		date_end = fixDate( self.request.get('when_end' ) )
+		
+		if date_end < date_start:
+			date_end = date_end + timedelta(days=1)
 		
 		event.who_name      = self.request.get('who_name')
 		event.what          = self.request.get('what')
-		event.when_start    = fixDate( self.request.get('when_start' ) )
-		event.when_end      = fixDate( self.request.get('when_end' ) )
+		event.when_start    = date_start
+		event.when_end      = date_end
 		event.skill         = self.request.get('skill' )
 		event.skill_neighbor  = self.request.get('skill_neighbor' )
 
-		event.where_name    = self.request.get('where_name')
+		place = models.Place( place_name=self.request.get('where_name'))
+		
+		if self.request.get( 'loc_geopt_lat' ) and self.request.get( 'loc_geopt_lng' ):
+			lat = round( float( self.request.get( 'loc_geopt_lat' ) ), 6)
+			lon = round( float( self.request.get( 'loc_geopt_lng' ) ), 6)
+			event.lat = lat
+			event.lon = lon	
+			place.lat = lat
+			place.lon = lon
+		
+		logging.info( "Place lat: %s" % place.lat )
+		logging.info( "Place lon: %s" % place.lon )
+		place.put()
+		
+		event.place    		= place
+		event.place_name	= self.request.get('where_name')
 		event.where_addr    = self.request.get('where_addr')
 		event.where_detail  = self.request.get('where_detail')
 
-		if self.request.get( 'loc_geopt_lat' ) and self.request.get( 'loc_geopt_lng' ):
-		    event.pt = db.GeoPt( self.request.get( 'loc_geopt_lat' ), self.request.get( 'loc_geopt_lng' ) )
 
 		event.init_geoboxes()
 		event.put()
@@ -151,7 +173,7 @@ class GetItems( webapp.RequestHandler ):
 		lat_hi = float( bounds[2] )
 		lng_hi = float( bounds[3] )
 		
-		events = models.Event.queryArea( lat_lo, lng_lo, lat_hi, lng_hi, datetime.now() )
+		events = models.Event.queryArea( lat_lo, lng_lo, lat_hi, lng_hi, datetime.now( tz ) )
 		
 		# This is inefficient
 		locations = {}
@@ -165,16 +187,15 @@ class GetItems( webapp.RequestHandler ):
 					# 'when_created': e_obj.when_created,
 					'skill': e_obj.skill,          
 					'skill_neighbor': e_obj.skill_neighbor, 
-					# 'where_loc': e_obj.where_loc,      
-					'where_loc_lat': e_obj.pt.lat,  
-					'where_loc_lng': e_obj.pt.lon,  
-					'where_name': e_obj.where_name,	
+					'where_loc_lat': e_obj.lat,  
+					'where_loc_lng': e_obj.lon,  
+					#'where_name': e_obj.where_name,	
 					'where_addr': e_obj.where_addr,	
 					'where_detail': e_obj.where_detail,   					
 			}
 			
 			
-			k = "%s|%s" % (e_obj.pt.lat, e_obj.pt.lon)
+			k = "%s|%s" % (e_obj.lat, e_obj.lon)
 			
 			right_list = locations.get( k )
 			if right_list:
@@ -233,17 +254,22 @@ class EventHandler( MyPage ):
 
 class UserHandler( MyPage ):
 	def get( self, username ):
+		events = []
+		old_events = []	
+		user_to_view = None
+		user_is_me = False
+
+		
 		self.FirstInit()
 		logging.info( "username: " + username)
 		user_to_view = models.get_user_by_username( username )
-		events = user_to_view.get_events( False )
-		old_events = user_to_view.get_events( True )
+		if user_to_view:
+			events = user_to_view.get_events( False )
+			old_events = user_to_view.get_events( True )
 		
-		user_is_me = False
-
-		user = models.get_current_user()
-		if user and user_to_view.user_id() == user.user_id():
-			user_is_me = True
+			user = models.get_current_user()
+			if user and user_to_view.user_id() == user.user_id():
+				user_is_me = True
 			
 		template_values = { 'user_to_view':user_to_view, 'events':events, 'old_events':old_events, 'user_is_me':user_is_me } 
 		self.AddUserInfo( template_values )
@@ -258,19 +284,60 @@ class UserHandler( MyPage ):
 				return False
 			
 			if user:
-				events = models.Event.all().ancestor( target_user ).filter( "when_end >=", datetime.now() ).fetch(50)
+				events = models.Event.all().ancestor( target_user ).filter( "when_end >=", datetime.now( tz ) ).fetch(50)
 				for event in events:
-					event.when_end = datetime.now()
+					event.when_end = datetime.now( tz )
 					event.put()
 		self.redirect( "/user/" + username )
 
 class LocationHandler( MyPage ):
-	def get( self, lng, lat, place_name ):
-		template_values = {} 
+	def get( self, lat, lon, place_name ):
+		events = []
+		
+		place = models.Place.all().filter( "lat =", float(lat) ).filter( "lon =", float(lon)).get()
+		if place:
+			logging.info( "found a place")
+			# Get all events from this location
+			q = models.Event.all()
+			events = q.filter( "place =", place ).filter( "when_end <", datetime.now( tz ) ).fetch(100)
+		
+		template_values = { "events": events, "place":place } 
+		logging.info( "Found so many: %s" % len( events ) )
+			
 		self.AddUserInfo( template_values )
-		path = os.path.join( os.path.dirname( __file__ ), 'templates/location.htm')
+		path = os.path.join( os.path.dirname( __file__ ), 'templates/place.htm')
 		self.response.out.write( template.render( path, template_values ))	
-					
+
+class ConversationHandler( MyPage ):
+	def get( self, username ):
+		user_to_view = None
+		user_is_me = False
+		
+		user_to_view = models.get_user_by_username( username )
+		if user_to_view:
+			events = user_to_view.get_events( False )
+			old_events = user_to_view.get_events( True )
+		
+			user = models.get_current_user()
+			if user and user_to_view.user_id() == user.user_id():
+				user_is_me = True
+
+		template_values = { 'user_to_view':user_to_view, 'user_is_me':user_is_me } 
+		path = os.path.join( os.path.dirname( __file__ ), 'templates/conversation.htm')
+		self.response.out.write( template.render( path, template_values ))	
+	def post( self ):
+		# self.request.get('who_name')
+		# how to send an email?
+		self.response.out.write( "OK" )	
+		
+		
+
+class TestHandler( MyPage ):
+	def get( self, username ):
+		template_values = {} 
+		path = os.path.join( os.path.dirname( __file__ ), 'templates/test.htm')
+		self.response.out.write( template.render( path, template_values ))	
+
 		
 class ComingSoon( webapp.RequestHandler ):
 	def get( self ):
@@ -279,18 +346,22 @@ class ComingSoon( webapp.RequestHandler ):
 def main():
 	application = webapp.WSGIApplication( 
                                      [
-									  ('/', Home ),
+									  
 									  #('/', ComingSoon ),
+									  ('/', Home ),
 									  ('/event/(.*)', EventHandler),
                                       ('/browse', Browse ),
                                       ('/add', Add_event ),
 									  ('/home', Home ),
 									  ('/get_items', GetItems ),
 									  ('/profile', Profile ),
-									  ('/place/(.*)/(.*)', LocationHandler ),
 									  ('/place/(.*)/(.*)/(.*)', LocationHandler ),
+									  ('/place/(.*)/(.*)', LocationHandler ),
 									  ('/user/(.*)/(.*)', UserHandler),
-									  ('/user/(.*)', UserHandler)
+									  ('/user/(.*)', UserHandler),
+									  ('/test', TestHandler ),
+									  ('/conversation/(.*)', ConversationHandler),
+									  ('/conversation', ConversationHandler)
                                       ], debug=True )
 	util.run_wsgi_app( application )
 

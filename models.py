@@ -1,8 +1,10 @@
 from google.appengine.ext import db
 from dateutil import parser
-from datetime import datetime
 from libraries import geobox
 from google.appengine.api import users
+from datetime import datetime
+from datetime import tzinfo
+from datetime import timedelta
 
 import logging
 
@@ -16,6 +18,23 @@ GEOBOX_CONFIGS = (
   (1, 5, False),
 )
 
+ZERO = timedelta(0)
+
+class UTC(tzinfo):
+    """UTC"""
+
+    def utcoffset(self, dt):
+        return ZERO
+
+    def tzname(self, dt):
+        return "UTC"
+
+    def dst(self, dt):
+        return ZERO
+
+tz = UTC()
+
+
 class CUser( db.Model ):
 	username = db.StringProperty()
 	email 	 = db.EmailProperty()
@@ -26,9 +45,11 @@ class CUser( db.Model ):
 	def get_events( self, history ):
 		q = Event.all().ancestor( self )
 		if not history:
-			q.filter( "when_end >=", datetime.now() )
+			logging.info( " ------- looking for events after: %s" % datetime.now( tz ))
+			q.filter( "when_end >=", datetime.now( tz ) )
 		else:
-			q.filter( "when_end <", datetime.now() )
+			logging.info( " ------- looking for events before: %s" % datetime.now( tz ))
+			q.filter( "when_end <", datetime.now( tz ) )
 		q.order( "-when_end" )
 		return q.fetch(100)
 
@@ -55,17 +76,19 @@ def get_user_by_username( username ):
 # Perhaps only store users in places rather than at their own geopoints
 
 class GeoLoc( db.Model ):
-	pt				= db.GeoPtProperty()
+	#pt				= db.GeoPtProperty()  # have problem with using filter( "pt = ", pt) <- wasn't finding items
+	lat				= db.FloatProperty()
+	lon				= db.FloatProperty()
 	geoboxes		= db.StringListProperty()
 
 	def init_geoboxes( self ):
 		all_boxes = []
 		for( resolution, slice, use_set) in GEOBOX_CONFIGS:
 			if use_set:
-				all_boxes.extend( geobox.compute_set( self.pt.lat, self.pt.lon, resolution, slice ) )
+				all_boxes.extend( geobox.compute_set( self.lat, self.lon, resolution, slice ) )
 			else:
 				# Check - why do we need to cast to float?
-				all_boxes.append( geobox.compute( float( self.pt.lat), float(self.pt.lon), resolution, slice ) )
+				all_boxes.append( geobox.compute( float( self.lat), float(self.lon), resolution, slice ) )
 
 		self.geoboxes = all_boxes
 
@@ -95,7 +118,7 @@ class GeoLoc( db.Model ):
 		
 		events_by_distance = []
 		for event in found_events.itervalues():
-			distance = geobox.earth_distance( lat, lng, event.pt.lat, event.pt.lon )
+			distance = geobox.earth_distance( lat, lng, event.lat, event.lon )
 			events_by_distance.append((distance, event))
 		
 		events_by_distance.sort()
@@ -116,8 +139,8 @@ class GeoLoc( db.Model ):
 
 	
 class Place( GeoLoc ):
-	name 			= db.StringProperty( multiline=False )
-
+	place_name 		= db.StringProperty( multiline=False )
+	
 # Let's define the data model first
 class Event( GeoLoc ):
 	user        	= db.ReferenceProperty( CUser, collection_name="users")
@@ -130,11 +153,7 @@ class Event( GeoLoc ):
 	skill_neighbor  = db.StringProperty(multiline=False)
 	
 	# This is now GeoLoc.pt - adjust all code accordingly
-	where_loc       = db.GeoPtProperty()
-	where_loc_lat   = db.FloatProperty()
-	where_loc_lng   = db.FloatProperty()
-	
-	where_name		= db.StringProperty(multiline=False)
+	# where_name		= db.StringProperty(multiline=False)
 	where_addr		= db.StringProperty(multiline=True)
 	where_detail 	= db.StringProperty(multiline=True)
 	place			= db.ReferenceProperty( Place, collection_name="places")

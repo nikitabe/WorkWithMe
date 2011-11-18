@@ -46,12 +46,20 @@ $(function(){
 	{% endif %}
 	</div>
 
-</div>
+	</div>
 
-<h3>Archive:</h3>
+	{% if old_events %}
+	<h3>Archive:</h3>
 
-	{% for event in old_events %}
-		{% include "event_snip.htm" %}
-	{% endfor %}
+		{% for event in old_events %}
+			{% include "event_snip.htm" %}
+		{% endfor %}
+	{% endif %}
+
 {% endif %}
+
+{% endblock %}
+
+{% block right_col %}
+<a href="/conversation/{{user_to_view.username}}"><button class="btn" >Send User a Message</button></a> 
 {% endblock %}

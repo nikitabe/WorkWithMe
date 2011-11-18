@@ -22,8 +22,30 @@ indexes:
 
 - kind: Event
   properties:
+  - name: place
+  - name: when_end
+
+- kind: Event
+  properties:
   - name: user
   - name: when_end
+
+- kind: Event
+  properties:
+  - name: user
+  - name: when_end
+    direction: desc
+
+- kind: Event
+  properties:
+  - name: who_name
+  - name: when_end
+
+- kind: Event
+  properties:
+  - name: who_name
+  - name: when_end
+    direction: desc
 
 - kind: Event
   ancestor: yes

@@ -52,7 +52,7 @@
 	{
     	findMeFnc( function(){
 			findPlacesNear( myLoc );
-			});		
+			});
 	}
 	
 	function addTestAddress()
@@ -61,7 +61,6 @@
 		$('#where_addr').val( 'Test address' );
 		$('#loc_geopt_lat').val( '1' );
 		$('#loc_geopt_lng').val( '2' );
-
 	}
 	
 	function displayDate()
@@ -73,11 +72,14 @@
 	
 	$(function () {		
 		$("#nav_post").addClass( "active");
-		init_add_event();
-		
+
+	    $("#do_submit").click( do_submit );
+
 		$('#map-overlay').bind('shown', function () {
 		  $("#searchResults").hide();
-		  init_map_stuff( findMeForAdd );
+		  init_btn_act();
+		  init_map_stuff();
+		  findMeForAdd();
 		})
 		
 		$('#btn_map_note_here').click( function(){
@@ -96,7 +98,7 @@
 {% endblock %}
 
 {% block right_col %}
-<h3>Thasssright!'</h3>
+<h3>Dassit!'</h3>
 {% endblock %}
 
 {% block main %}
@@ -121,9 +123,9 @@
 				<div class="find_step hidden" id="step_confirm">
 					3.  Confirm the location:
 					<br/>
-			        <input type="text" id="new_where_name" name="new_where_name" value="name of the place" />
+			        <input type="text" id="new_where_name" name="new_where_name" placeholder="Name of this venue" value="name of the place" />
 			        <br/>
-					<input type="text" id="new_where_addr" name="new_where_addr" value="address"  />
+					<input type="text" id="new_where_addr" name="new_where_addr" placeholder="Address" value="address"  />
 				</div>
 				<input type="hidden" id="new_loc_geopt_lat" name="new_loc_geopt_lat"></input>
 				<input type="hidden" id="new_loc_geopt_lng" name="new_loc_geopt_lng"></input>
