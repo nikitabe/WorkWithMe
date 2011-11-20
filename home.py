@@ -189,7 +189,7 @@ class GetItems( webapp.RequestHandler ):
 					'skill_neighbor': e_obj.skill_neighbor, 
 					'where_loc_lat': e_obj.lat,  
 					'where_loc_lng': e_obj.lon,  
-					#'where_name': e_obj.where_name,	
+					'place_name': e_obj.place.place_name,	
 					'where_addr': e_obj.where_addr,	
 					'where_detail': e_obj.where_detail,   					
 			}
@@ -296,10 +296,10 @@ class LocationHandler( MyPage ):
 		
 		place = models.Place.all().filter( "lat =", float(lat) ).filter( "lon =", float(lon)).get()
 		if place:
-			logging.info( "found a place")
+			logging.info( "found a place: " + place.place_name)
 			# Get all events from this location
 			q = models.Event.all()
-			events = q.filter( "place =", place ).filter( "when_end <", datetime.now( tz ) ).fetch(100)
+			events = q.filter( "place =", place ).filter( "when_end >=", datetime.now( tz ) ).fetch(100)
 		
 		template_values = { "events": events, "place":place } 
 		logging.info( "Found so many: %s" % len( events ) )

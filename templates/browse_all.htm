@@ -46,6 +46,7 @@ function createEventMarker( lat, lng, message  )
 // This function tries to find everyone on the current map
 // and places them on the map
 function findItems(){
+	console.log( "looking for items around")
 	setStatus( "working", "Working...", "findItems", function(){
 
 	var bounds = map.getBounds();
@@ -58,7 +59,7 @@ function findItems(){
 					},
 				success: function( items_json ){
 					//$("#received").html( "he: " + items_json );
-					cleanMarkerList();
+					clearMarkerList();
 					var locations = eval( items_json );
 					
 					for( var loc in locations ){
@@ -67,7 +68,7 @@ function findItems(){
 						var items = locations[loc];
 						createEventMarker( coordinates[0], coordinates[1], 
 								"<div class='map_info_who'>" + items.length + " people hanging out at </div>" +
-								"<div class='map_info_place_name'>" + items[0].where_name +  "</div>" + 
+								"<div class='map_info_place_name'><a href='/place/" + items[0].where_loc_lat + "/" + items[0].where_loc_lng + "/" + items[0].place_name + "'>" + items[0].place_name + "</a></div>" + 
 								"<div class='map_info_address'>" + items[0].where_addr + "</div>");
 					} 
 					setStatus( "success", "Search Completed", "findItems" );
@@ -91,6 +92,8 @@ function findMeForBrowseAll()
 
 
 $(function () {
+	
+	// init_btn_act - used to be
     $("#searchBtn").click( function () {
         browseSearch();
     });
@@ -101,7 +104,7 @@ $(function () {
 	});
 	
 	$("#nav_browse").addClass( "active" );
-	//init_btn_act();  // This is not what's needed
+
 	init_map_stuff();
 	findMeForBrowseAll();
 });
@@ -116,7 +119,6 @@ $(function () {
 	<button class="btn" name="searchBtn" id="searchBtn" value="Search">Search</button>
 	<button class='btn' name='findMeBtn' id='findMeBtn' value='Find Me' onclick='findMeForBrowseAll()'>Find Me Again!</button>
 	<button class="btn" name="" id="" value="Test" onclick="setStatus('working', 'test')">Test</button>
-    <div id="searchResults" class="alert-message block-message info hidden"></div>
 </div>
 
 <div id="map_canvas" ></div>

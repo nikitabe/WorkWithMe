@@ -77,7 +77,17 @@
 
 		$('#map-overlay').bind('shown', function () {
 		  $("#searchResults").hide();
-		  init_btn_act();
+
+		// Initialize map buttons	
+	    $("#searchBtn").click( function () {
+	        searchFnc();
+	    });
+		$("#where").keydown( function(event){
+			if (event.keyCode == '13') {
+				searchFnc();
+			}
+		});
+
 		  init_map_stuff();
 		  findMeForAdd();
 		})
