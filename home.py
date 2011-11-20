@@ -267,12 +267,12 @@ class UserHandler( MyPage ):
 		user_to_view = models.get_user_by_username( username )
 		if user_to_view:
 			events = user_to_view.get_events( False )
-			old_events = user_to_view.get_events( True )
 		
 			user = models.get_current_user()
 			if user and user_to_view.user_id() == user.user_id():
 				user_is_me = True
-			
+				old_events = user_to_view.get_events( True )  # Security - don't let people see each other's histories
+
 		template_values = { 'user_to_view':user_to_view, 'events':events, 'old_events':old_events, 'user_is_me':user_is_me } 
 		self.AddUserInfo( template_values )
 		path = os.path.join( os.path.dirname( __file__ ), 'templates/user.htm')
@@ -325,6 +325,7 @@ class ConversationHandler( MyPage ):
 				user_is_me = True
 
 		template_values = { 'user_to_view':user_to_view, 'user_is_me':user_is_me } 
+		self.AddUserInfo( template_values )
 		path = os.path.join( os.path.dirname( __file__ ), 'templates/conversation.htm')
 		self.response.out.write( template.render( path, template_values ))	
 	def post( self ):
