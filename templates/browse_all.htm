@@ -46,13 +46,13 @@ function createEventMarker( lat, lng, message  )
 // This function tries to find everyone on the current map
 // and places them on the map
 function findItems(){
-	console.log( "looking for items around")
+	console.log( "looking for items around");
 	setStatus( "working", "Working...", "findItems", function(){
 
 	var bounds = map.getBounds();
 	// Make the AJAX call to get the items within bounds
 	$.ajax( {
-				url: "/get_items?bounds=" + bounds.toUrlValue() + '&json=1', 
+				url: "/get_items?bounds=" + bounds.toUrlValue(10) + '&json=1', 
 				dataType: 'json',
 				error: function(jqXHR, textStatus, errorThrown){
 						setStatus( "error", "There was an error: " + jqXHR + ", " + textStatus + ", "+ errorThrown, "findItems" );
@@ -66,8 +66,9 @@ function findItems(){
 						
 						var coordinates = loc.split( "|");
 						var items = locations[loc];
+						person_str = ( items.length == 1 )  ? "person" : "people";
 						createEventMarker( coordinates[0], coordinates[1], 
-								"<div class='map_info_who'>" + items.length + " people hanging out at </div>" +
+								"<div class='map_info_who'>" + items.length + " " + person_str + " hanging out at </div>" +
 								"<div class='map_info_place_name'><a href='/place/" + items[0].where_loc_lat + "/" + items[0].where_loc_lng + "/" + items[0].place_name + "'>" + items[0].place_name + "</a></div>" + 
 								"<div class='map_info_address'>" + items[0].where_addr + "</div>");
 					} 
@@ -75,6 +76,7 @@ function findItems(){
 				} 
 			});
 	} );
+	return true;
 }
 
 // Finds the address and deploys the pin around that location.
@@ -107,6 +109,12 @@ $(function () {
 
 	init_map_stuff();
 	findMeForBrowseAll();
+	
+	// Need to call listener because that is when the bounds actually change
+	// Not using bounds_changed because http://stackoverflow.com/questions/4338490/google-map-event-bounds-changed-triggered-multiple-times-when-dragging
+	google.maps.event.addListener(map, 'dragend', findItems );
+	google.maps.event.addListener(map, 'zoom_changed', findItems );
+
 });
 
 </script>

@@ -173,6 +173,8 @@ class GetItems( webapp.RequestHandler ):
 		lat_hi = float( bounds[2] )
 		lng_hi = float( bounds[3] )
 		
+		logging.info( "Searching for: lat_lo %s, lat_hi %s, lng_lo %s, lng_hi %s " % (lat_lo, lat_hi, lng_lo, lng_hi) )
+		
 		events = models.Event.queryArea( lat_lo, lng_lo, lat_hi, lng_hi, datetime.now( tz ) )
 		
 		# This is inefficient
