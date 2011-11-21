@@ -21,13 +21,19 @@
 {% block main %}
 
 	{% if user_to_view %}
-	<input type="textarea" id="message"></input>
-	<button class="btn" onclick="do_send( '{{user_to_view.username}}', $('#message').val() )">Send</button>
-	<div id="out_str"></div>
+	<div class="input">
+		<textarea type="textarea" placeholder="Enter your message..." class="xxlarge" rows=5 id="message"></textarea>
+		<span class="help-block">This will be sent as email to the user</span>
+	</div>
+	<button class="btn primary" onclick="do_send( '{{user_to_view.username}}', $('#message').val() )">Send</button>
 	{% endif %}
 
 {% endblock %}
 
 {% block right_col %}
 Send user a message...
+<div class="alert-message hidden " data-alert="alert" id="sent_msg">
+        <a class="close" href="#" onclick="$('#sent_msg').slideUp('fast')">×</a>
+        <p></p>
+ </div>
 {% endblock %}

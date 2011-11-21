@@ -18,6 +18,10 @@ handlers:
 
 - url: /profile
   script: home.py
+  
+- url: /conversation/.*
+  script: home.py
+  login: required
 
 - url: /.*
   script: home.py

@@ -56,10 +56,13 @@ $(function(){
 
 	{% if old_events %}
 	<h3>Archive:</h3>
-
-		{% for event in old_events %}
-			{% include "event_snip.htm" %}
-		{% endfor %}
+		<table>
+			{% for event in old_events %}
+			<tr><td>		
+				{% include "event_snip.htm" %}
+			</td></tr>
+			{% endfor %}
+		</table>
 	{% endif %}
 
 {% endif %}

@@ -15,6 +15,7 @@
 	.map_info_who { font-weight:bold}
 	.map_info_place_name { text-decoration:italic}
 	.map_info_addressP{ font-size:5px	}
+	
 </style>
 
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places&sensor=false"></script>
@@ -122,20 +123,23 @@ $(function () {
 
 {% block main %}
 <div id="received" ></div>
-<div class="find_step" >
-    <input type="text" id="where" name="where" placeholder="Click to search for an address or a place..." />
+<div class="well" >
+    <input type="text" class="span6" id="where" name="where" placeholder="Click to search for an address or a place..." />
 	<button class="btn" name="searchBtn" id="searchBtn" value="Search">Search</button>
 	<button class='btn' name='findMeBtn' id='findMeBtn' value='Find Me' onclick='findMeForBrowseAll()'>Find Me Again!</button>
+	{% comment %}	
 	<button class="btn" name="" id="" value="Test" onclick="setStatus('working', 'test')">Test</button>
+	{% endcomment %}
 </div>
 
 <div id="map_canvas" ></div>
-
+<table>
     {% for event in events %}
+	<tr><td>
 		{% include "event_snip.htm" %}
+	</td></tr>
     {% endfor %}
-    Display map
-    <a href='/home'>Back</a>
+</table>
 {% endblock %}
 
 {% block right_col %}

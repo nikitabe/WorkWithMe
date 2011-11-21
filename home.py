@@ -16,6 +16,10 @@ from datetime import tzinfo
 from models import tz 
 from google.appengine.ext.webapp.util import run_wsgi_app
 
+
+from google.appengine.api import mail
+
+
 class MyPage( webapp.RequestHandler ):
 	def FirstInit(self):
 		user = models.get_current_user()
@@ -73,7 +77,7 @@ class Browse( MyPage ):
 		self.FirstInit()
 		events = models.Event.all().filter( "when_end >=", datetime.now( tz )).fetch( 50 )
 		PrepItemTemplate( events )
-		template_values = {'events':events, 'show_link':1}
+		template_values = {'events':events, 'show_link':0 }
 		self.AddUserInfo( template_values )
 		path = os.path.join( os.path.dirname(__file__), 'templates/browse_all.htm' )
 		self.response.out.write( template.render( path, template_values ))
@@ -329,10 +333,29 @@ class ConversationHandler( MyPage ):
 		path = os.path.join( os.path.dirname( __file__ ), 'templates/conversation.htm')
 		self.response.out.write( template.render( path, template_values ))	
 	def post( self ):
-		# self.request.get('who_name')
-		# how to send an email?
-		self.response.out.write( "OK" )	
+		send_to_username = self.request.get('username')
+		target_user = models.get_user_by_username( send_to_username )
 		
+		# how to send an email?
+		user = models.get_current_user()
+		if( user ):
+			message = mail.EmailMessage(sender=user.email,
+			                            subject="Message via WorkWithMe from " + user.username )
+
+			message.to = target_user.email #"Albert Johnson <Albert.Johnson@example.com>"
+			message.body = self.request.get( 'message' )
+
+			message.send()
+			
+			logging.info( "sender: " + message.sender )
+			logging.info( "subject: " + message.subject )
+			logging.info( "to: " + message.to )
+			logging.info( "body: " + message.body )
+			
+			
+			self.response.out.write( "OK" )	
+		else:
+			self.response.out.write( "User Not Logged In" )
 		
 
 class TestHandler( MyPage ):
@@ -350,8 +373,8 @@ def main():
 	application = webapp.WSGIApplication( 
                                      [
 									  
-									  #('/', ComingSoon ),
-									  ('/', Home ),
+									  ('/', ComingSoon ),
+									  #('/', Browse ),
 									  ('/event/(.*)', EventHandler),
                                       ('/browse', Browse ),
                                       ('/add', Add_event ),
