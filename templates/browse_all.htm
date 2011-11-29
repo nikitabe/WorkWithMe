@@ -40,14 +40,17 @@ function createEventMarker( lat, lng, message  )
         infowindow.setContent( message );
         infowindow.open(map, this);
     });
-	console.log( "creating marker!");
+	console.log( "creating a marker: " + message );
 	return marker;	
 }
 
 // This function tries to find everyone on the current map
 // and places them on the map
 function findItems(){
-	console.log( "looking for items around");
+	$( "#events_table tr" ).slideUp( 'slow' );
+	$( "#events_table" ).html( "" );
+	
+	console.log( "findItems: looking for items around");
 	setStatus( "working", "Working...", "findItems", function(){
 
 	var bounds = map.getBounds();
@@ -72,12 +75,23 @@ function findItems(){
 								"<div class='map_info_who'>" + items.length + " " + person_str + " hanging out at </div>" +
 								"<div class='map_info_place_name'><a href='/place/" + items[0].where_loc_lat + "/" + items[0].where_loc_lng + "/" + items[0].place_name + "'>" + items[0].place_name + "</a></div>" + 
 								"<div class='map_info_address'>" + items[0].where_addr + "</div>");
+						
+						for( e_ind in items ){
+							addEvent( "event_" + items[e_ind].event_id, items[e_ind].event_html );
+						}
+						adjust_dates();
 					} 
-					setStatus( "success", "Search Completed", "findItems" );
+					setStatus( "success", "Looking for people in the area completed.", "findItems" );
 				} 
 			});
 	} );
 	return true;
+}
+
+function addEvent( id, event_html )
+{
+	$( "#events_table" ).append( "<tr class='hidden' id='" + id + "'><td>" + event_html + "</td></tr>");
+	$( "#" + id ).slideDown( 'slow' );
 }
 
 // Finds the address and deploys the pin around that location.
@@ -90,7 +104,7 @@ function browseSearch()
 // Finds my location, then finds all people who are hanging out here.
 function findMeForBrowseAll()
 {
-	findMeFnc( findItems );	
+	findMeFnc();	
 }
 
 
@@ -123,9 +137,9 @@ $(function () {
 
 {% block main %}
 <div id="received" ></div>
-<div class="well" >
-    <input type="text" class="span6" id="where" name="where" placeholder="Click to search for an address or a place..." />
-	<button class="btn" name="searchBtn" id="searchBtn" value="Search">Search</button>
+<div class="well" style="padding:10px">
+    <input type="text" class="span6" id="where" name="where" placeholder="Enter an address to search around..." />
+	<button class="btn primary" name="searchBtn" id="searchBtn" value="Search">Search</button>
 	<button class='btn' name='findMeBtn' id='findMeBtn' value='Find Me' onclick='findMeForBrowseAll()'>Find Me Again!</button>
 	{% comment %}	
 	<button class="btn" name="" id="" value="Test" onclick="setStatus('working', 'test')">Test</button>
@@ -133,7 +147,7 @@ $(function () {
 </div>
 
 <div id="map_canvas" ></div>
-<table>
+<table id="events_table">
     {% for event in events %}
 	<tr><td>
 		{% include "event_snip.htm" %}
@@ -143,7 +157,22 @@ $(function () {
 {% endblock %}
 
 {% block right_col %}
+{% if my_events %}
+	{% for event in my_events %}
+		{% include "event_snip.htm" %}
+	{% endfor %}
+	<a href='/user/{{username}}'>
+		<button class="btn primary">Update Your Status</button>
+	</a>	
+{% else %}
+<a href="/add">
+	<button class="btn primary">Update Your Status</button>
+</a>
+{% endif %}
+<hr/>
+<div class="status">
 <div id="map_success" class="alert-message hidden success"></div>
 <div id="map_working" class="alert-message hidden info"   ></div>
 <div id="map_error"   class="alert-message hidden error"  ></div>
+</div>
 {% endblock %}

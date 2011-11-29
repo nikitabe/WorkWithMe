@@ -70,5 +70,7 @@ $(function(){
 {% endblock %}
 
 {% block right_col %}
+{% if not user_is_me %}
 <a href="/conversation/{{user_to_view.username}}"><button class="btn" >Send User a Message</button></a> 
+{% endif %}
 {% endblock %}

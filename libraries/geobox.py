@@ -160,22 +160,34 @@ def _round_slice_down(coord, slice):
 
 
 def compute_tuple(lat, lon, resolution, slice):
-  """Computes the tuple Geobox for a coordinate with a resolution and slice."""
-  decimal.getcontext().prec = resolution + 3
-  lat = decimal.Decimal(str(lat))
-  lon = decimal.Decimal(str(lon))
-  slice = decimal.Decimal(str(1.0 * slice * 10 ** -resolution))
-  
-  adjusted_lat = _round_slice_down(lat, slice)
-  adjusted_lon = _round_slice_down(lon, slice)
-  return (adjusted_lat, adjusted_lon - slice,
-          adjusted_lat - slice, adjusted_lon)
+	logging.info( "compute_tuple1: Lat %s, lon %s, res %s, slice %s" % (lat, lon, resolution, slice ) )
+	"""Computes the tuple Geobox for a coordinate with a resolution and slice."""
+	if( resolution > 0 ):
+		decimal.getcontext().prec = resolution + 3
+		lat = decimal.Decimal(str(lat))
+		lon = decimal.Decimal(str(lon))
+		slice = decimal.Decimal(str(1.0 * slice * 10 ** -resolution))
+	else:
+		lat = lat - lat % (10 ** resolution)
+		lon = lon - lon % (10 ** resolution)
+		slice = 1.0 * slice * 10 ** -resolution
+
+	logging.info( "compute_tuple2: Lat %s, lon %s, res %s, slice %s" % (lat, lon, resolution, slice ) )
+
+	adjusted_lat = _round_slice_down(lat, slice)
+	adjusted_lon = _round_slice_down(lon, slice)
+	return (adjusted_lat, adjusted_lon - slice,
+	        adjusted_lat - slice, adjusted_lon)
 
 
 def format_tuple(values, resolution):
-  """Returns the string representation of a geobox tuple."""
-  format = "%%0.%df" % resolution
-  return "|".join(format % v for v in values)
+	"""Returns the string representation of a geobox tuple."""
+	if( resolution > 0 ):
+		format = "%%0.%df" % resolution
+	else:
+		format = "%d"
+
+	return "|".join(format % v for v in values)
 
 
 def compute(lat, lon, resolution, slice):

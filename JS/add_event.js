@@ -6,6 +6,19 @@ function hide_errors()
 	
 }
 
+function set_test_data(){
+	$( "#what" ).val( "test what");
+	$( "#where_quick_name" ).val( "test quickname" );
+	$( "#where_name" ).val( "test name" );
+	$( "#where_addr" ).val( "test addr" );
+	$( "#where_detail" ).val( "test detail" );
+	$( "#when_end" ).val( "6pm" );
+	$( "#skill" ).val( "test skill" );
+	$( "#skill_neighbor" ).val( "test" );
+	$( "#loc_geopt_lat" ).val( "41.2345" );
+	$( "#loc_geopt_lng" ).val( "71.2345" );
+}
+
 function do_submit(){
 	hide_errors()
 	

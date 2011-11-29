@@ -17,9 +17,13 @@
 
 {% if events %}
 	<h2>At this place we have:</h2>
+	<table>
 	{% for event in events %}
+		<tr><td>
 		{% include "event_snip.htm" %}
+		</td></tr>
 	{% endfor %}
+	</table>
 {% else %}
 	There is nobody here at the moment.
 {% endif %}

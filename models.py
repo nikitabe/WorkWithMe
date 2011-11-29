@@ -16,6 +16,9 @@ GEOBOX_CONFIGS = (
   (3, 16, False),
   (2, 5, False),
   (1, 5, False),
+  (0, 5, False),
+  (-1, 5, False),
+  (-2, 5, False),
 )
 
 ZERO = timedelta(0)
@@ -98,13 +101,15 @@ class GeoLoc( db.Model ):
 		found_events = {}
 		for params in GEOBOX_CONFIGS:
 			if( len(found_events) >= max_results ):
+				logging.info("Break1")
 				break
 			if( params < min_params ):
+				logging.info("Break2: params=%s, min_params=%s" % (params, min_params) )
 				break
 		
 			resolution, slice, unused = params
 			box = geobox.compute( lat, lng, resolution, slice )
-			#logging.info("Searching elements in box =%s at resolution=%s, slice=%s", box, resolution, slice)
+			logging.info("Searching elements in box =%s at resolution=%s, slice=%s", box, resolution, slice)
 			query = cls.all()
 			query.filter( "geoboxes =", box )
 			if t != None:
@@ -135,7 +140,7 @@ class GeoLoc( db.Model ):
 		
 	@classmethod
 	def queryArea( self, lat_lo, lng_lo, lat_hi, lng_hi, t = None ):
-		return self.query( (lat_lo + lat_hi) / 2, (lng_lo + lng_hi) / 2, 10, (2,0), t)
+		return self.query( (lat_lo + lat_hi) / 2, (lng_lo + lng_hi) / 2, 10, (-3,0), t)
 
 	
 class Place( GeoLoc ):
@@ -170,3 +175,5 @@ def output_events():
 def get_event( event_id ):
 	return Event.get_by_id( event_id )
 	
+def get_place( lat_in, lon_in, name_in ):
+	return Place.get_or_insert( "%s_%s_%s" % (lat_in, lon_in, name_in), lat = lat_in, lon = lon_in, place_name = name_in )

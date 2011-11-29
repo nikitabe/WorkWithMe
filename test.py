@@ -1,7 +1,9 @@
 #from dateutil import parser
 #date_object = parser.parse( '1pm' )
-from datetime import datetime  
-print datetime.now().strftime("%A, %d. %B %Y %I:%M%p")
 
-<input type="textarea" id="code"></input>
-<button>go</button>
+from libraries import geobox
+
+
+print geobox.compute_tuple( 42.394497, -71.120768, -1, 5 )
+
+print geobox.format_tuple( geobox.compute_tuple( 42.394497, -71.120768, -1, 5 ), -1 )

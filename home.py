@@ -75,9 +75,13 @@ class Browse( MyPage ):
 	
 	def get( self ):
 		self.FirstInit()
-		events = models.Event.all().filter( "when_end >=", datetime.now( tz )).fetch( 50 )
-		PrepItemTemplate( events )
-		template_values = {'events':events, 'show_link':0 }
+		template_values = {}
+		
+		user = models.get_current_user()
+		if( user ):
+			my_events = user.get_events( False )
+			template_values.update( { "my_events" : my_events })
+		
 		self.AddUserInfo( template_values )
 		path = os.path.join( os.path.dirname(__file__), 'templates/browse_all.htm' )
 		self.response.out.write( template.render( path, template_values ))
@@ -139,19 +143,15 @@ class Add_event( MyPage ):
 		event.skill         = self.request.get('skill' )
 		event.skill_neighbor  = self.request.get('skill_neighbor' )
 
-		place = models.Place( place_name=self.request.get('where_name'))
-		
+		lat = 0
+		lon = 0
 		if self.request.get( 'loc_geopt_lat' ) and self.request.get( 'loc_geopt_lng' ):
 			lat = round( float( self.request.get( 'loc_geopt_lat' ) ), 6)
 			lon = round( float( self.request.get( 'loc_geopt_lng' ) ), 6)
 			event.lat = lat
 			event.lon = lon	
-			place.lat = lat
-			place.lon = lon
-		
-		logging.info( "Place lat: %s" % place.lat )
-		logging.info( "Place lon: %s" % place.lon )
-		place.put()
+
+		place = models.get_place( lat, lon, self.request.get('where_name'))
 		
 		event.place    		= place
 		event.place_name	= self.request.get('where_name')
@@ -181,11 +181,20 @@ class GetItems( webapp.RequestHandler ):
 		
 		events = models.Event.queryArea( lat_lo, lng_lo, lat_hi, lng_hi, datetime.now( tz ) )
 		
+		logging.info( "Search returned %s results" % len( events) )
+
+		
 		# This is inefficient
 		locations = {}
 		for e in events:
 			e_obj = e[1]
+
+			template_values = {'event':e_obj}
+			path = os.path.join( os.path.dirname(__file__), 'templates/event_snip.htm' )
+			event_html = template.render( path, template_values )
+
 			out_obj = {
+					'event_id': e_obj.key().id(),
 					'who_name': e_obj.who_name,      
 					'what': e_obj.what,           
 					#'when_start': e_obj.when_start,     
@@ -197,7 +206,8 @@ class GetItems( webapp.RequestHandler ):
 					'where_loc_lng': e_obj.lon,  
 					'place_name': e_obj.place.place_name,	
 					'where_addr': e_obj.where_addr,	
-					'where_detail': e_obj.where_detail,   					
+					'where_detail': e_obj.where_detail,
+					'event_html': event_html					
 			}
 			
 			
@@ -302,13 +312,13 @@ class LocationHandler( MyPage ):
 		
 		place = models.Place.all().filter( "lat =", float(lat) ).filter( "lon =", float(lon)).get()
 		if place:
-			logging.info( "found a place: " + place.place_name)
+			logging.info( "LocationHandler: found a place: " + place.place_name)
 			# Get all events from this location
 			q = models.Event.all()
 			events = q.filter( "place =", place ).filter( "when_end >=", datetime.now( tz ) ).fetch(100)
 		
 		template_values = { "events": events, "place":place } 
-		logging.info( "Found so many: %s" % len( events ) )
+		logging.info( "LocationHandler: Found so many: %s" % len( events ) )
 			
 		self.AddUserInfo( template_values )
 		path = os.path.join( os.path.dirname( __file__ ), 'templates/place.htm')

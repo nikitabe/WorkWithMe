@@ -34,7 +34,7 @@ function init_map_stuff () {
 // Sets the current status sliding down the right panel
 function setStatus( type, status_str, function_name, complete_func )
 {
-	console.log( "setting status to: " + type + ": " + status_str + " in " + function_name );
+	console.log( function_name + ": " + type + ": " + status_str );
 	$("#map_working").slideUp( 'fast', function(){
 		$("#map_success").slideUp( 'fast', function(){
 			$("#map_error").slideUp( 'fast', function(){
@@ -318,7 +318,7 @@ function applyMyNewPosition()
 }
 
 function locFoundYou( pos, complete_func ) {
-	console.log( "in logFound " + Math.random());
+	console.log( "locFoundYou: in logFound" );
 	$("#map_working").slideUp( 'fast', function(){
     	$("#map_working").html("Found your coordinates.").slideDown( "slow" );
 	    var lat = pos.coords.latitude;
@@ -326,9 +326,6 @@ function locFoundYou( pos, complete_func ) {
 
 		myLoc = new google.maps.LatLng(lat,lng);
 		
-	    map.setCenter(myLoc);
-	    map.setZoom(default_zoom);
-
 		addMyMarker( myLoc, "I am here!", complete_func );
 	});
 }
@@ -356,7 +353,8 @@ function findPlacesNear( loc )
 
 function addMyMarker( loc, msg, complete_func )
 {
-	
+	console.log( "addMyMarker: msg");
+	myLoc = loc;
     myLocMarker = new google.maps.Marker({
 		map: map,
 		position: loc,
@@ -377,6 +375,7 @@ function addMyMarker( loc, msg, complete_func )
 	// Need to call listener because that is when the bounds actually change
 	listener_handle = google.maps.event.addListenerOnce(map, 'bounds_changed', function() {
 	 	if( typeof( complete_func ) != 'undefined' ){
+			console.log( 'addMyMarker: running complete_func');
 			complete_func();
 			//google.maps.event.removeListener(listener_handle);
 		}			
