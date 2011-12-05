@@ -6,7 +6,6 @@ from google.appengine.ext.webapp import util
 from google.appengine.ext.webapp import template
 import logging
 from django.utils import simplejson
-import json
 import models
 from google.appengine.ext import db
 from datetime import datetime
@@ -102,6 +101,9 @@ class Add_event( MyPage ):
 
 		user = models.get_current_user()
 		if user:
+			if not user.username:
+				self.redirect( '/profile')          
+			 	return
 			old_event = models.Event.all().filter( "user =", user.key()).order( "-when_end").get()
 			if old_event:				
 				template_values.update( {
@@ -251,7 +253,7 @@ class Profile( MyPage ):
 		user.username = un
 		user.put()
 		
-		output = json.dumps( [user.username, "UpdateComplete"] );
+		output = simplejson.dumps( [user.username, "UpdateComplete"] );
 		
 		self.response.out.write( output )
 

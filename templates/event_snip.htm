@@ -8,18 +8,32 @@
 			{% endif %}
 		</span>
         is 
+		{% if event.what %}
         <span class='item_prop'>{{event.what}}</span>
-        at
+        {% endif %}
+		at
         <span class='item_prop'><a href="/place/{{event.place.lat}}/{{event.place.lon}}/{{event.place.place_name}}">{{event.place.place_name}}</a></span>
         from 
         <span class='item_prop adjust_date'>{{event.when_start}}</span>
         until 
 
-        <span class='item_prop adjust_date'>{{event.when_end}}</span>
-        , who knows 
-        <span class='item_prop'>{{event.skill}}</span>
-        and would like to sit next to
+        <span class='item_prop adjust_date'>{{event.when_end}}
+		</span>.
+		
+		{% if event.where_detail %}
+		Will be 
+        <span class='item_prop'>{{event.where_detail}}</span>.
+		{% endif %}
+		
+		{% if event.skill %}
+		Knows 
+        <span class='item_prop'>{{event.skill}}</span>.
+		{% endif %}
+		
+		{% if event.skill_neighbor %}
+        Would like to sit next to
         <span class='item_prop'>{{event.skill_neighbor}}</span>.
+		{% endif %}
 		{% if show_link %}
 			<a href="/event/{{event.id}}">(View {{event.id}})</a> 
 		{% endif %}

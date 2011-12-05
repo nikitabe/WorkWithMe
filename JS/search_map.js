@@ -13,6 +13,7 @@ var map,
 	map_fields = 'loc_geopt_lat loc_geopt_lng where_name where_addr where_detail'.split(" "),
 	div_statuses = 'working error success'.split(" "),
 	
+	already_working = false,
 	default_zoom = 15;
 	
 var ADD_MARKER = true,
@@ -38,9 +39,15 @@ function setStatus( type, status_str, function_name, complete_func )
 	$("#map_working").slideUp( 'fast', function(){
 		$("#map_success").slideUp( 'fast', function(){
 			$("#map_error").slideUp( 'fast', function(){
+				// Set text
 				$("#map_" + type ).html( status_str ).slideDown( 'slow', function(){
 					if( complete_func ) complete_func();
 					} );
+					// Add a roller!
+				if( type == "working" ){
+					$( "#map_working" ).append( '<img src="/images/ajax-loader.gif" />' )
+				}
+
 			});
 		});
 	});
@@ -49,9 +56,12 @@ function setStatus( type, status_str, function_name, complete_func )
 // Attempts to center the map on an address
 function centerOnAddress( address_txt, complete_func )
 {
+	if( already_working ) return;
+	already_working = true;
 	clearMyLocMarker();
 	setStatus( "working", "Digging around... ", "centerOnAddress", function(){
 	    geocoder.geocode( { 'address': address_txt }, function(results, stat) {
+			already_working = false;
 	    	if (stat == google.maps.GeocoderStatus.OK) {
 			
 				var p = results[0];
@@ -90,6 +100,9 @@ function searchFnc( complete_func ) {
 
 function attemptFindViaPlace( sTxt, complete_func, error_func )
 {
+	if( already_working ) return;
+	already_working = true;
+
 	var map_bounds = map.getBounds();
     var placeApi = new google.maps.places.PlacesService(map);
     var searchRequest = {
@@ -98,6 +111,7 @@ function attemptFindViaPlace( sTxt, complete_func, error_func )
 		bounds: map_bounds
 		};
     placeApi.search(searchRequest, function( r, s ){
+			already_working = false;
 			if( !procPlaceSearchResponse( r, s ) ){
 				console.log( "Finding of a place failed.  Looking via address.")
 				if( !find_location_via_address( sTxt, ADD_MARKER ) ){
@@ -176,7 +190,10 @@ function addAddressMarker( loc, info_window_str, place_item ) {
 function find_location_via_address( address_txt, add_address_marker, found_item_func )
 {
 	console.log( "searching for address: " + address_txt );
+ 	if( already_working ) return;
+	already_working = true;
     geocoder.geocode( { 'address': address_txt }, function(results, stat) {
+		already_working = false;
 		console.log( "search result: " + stat );
 	    var dBounds = new google.maps.LatLngBounds();
     	if (stat == google.maps.GeocoderStatus.OK) {
@@ -267,14 +284,22 @@ function showOnlyPlace(pid) {
 }
 
 function findMeFnc( complete_func ) {
+ 	if( already_working ) return;
+
 	setStatus( "working", 'Looking for you...', "findMeFnc", function(){
 		clearMyLocMarker();
 	    if (navigator &&
 	            (ng = navigator.geolocation) &&
 	            ng.getCurrentPosition) {
-	        ng.getCurrentPosition( function( pos ){ 
+		   already_working = true;
+	       ng.getCurrentPosition( function( pos ){ 
+									already_working = false;
 									locFoundYou( pos, complete_func );
-								   }, locNoFoundYou);
+								   }, 
+								function( error ){
+									already_working = false;
+									locNoFoundYou( error );
+								});
 		} else {
 			setStatus( "error", "<h3>Your browser does not support geolocation.  <button class='btn' name='findMeBtn'' id='findMeBtn' value='Find Me'>Try Again!</button></h3>", "findMeFnc" );
 	    }
@@ -319,19 +344,19 @@ function applyMyNewPosition()
 
 function locFoundYou( pos, complete_func ) {
 	console.log( "locFoundYou: in logFound" );
-	$("#map_working").slideUp( 'fast', function(){
-    	$("#map_working").html("Found your coordinates.").slideDown( "slow" );
-	    var lat = pos.coords.latitude;
-	    var lng = pos.coords.longitude;
+	setStatus( "success", "Found your coordinates." );
+    var lat = pos.coords.latitude;
+    var lng = pos.coords.longitude;
 
-		myLoc = new google.maps.LatLng(lat,lng);
-		
-		addMyMarker( myLoc, "I am here!", complete_func );
-	});
+	myLoc = new google.maps.LatLng(lat,lng);
+	
+	addMyMarker( myLoc, "I am here!", complete_func );
 }
 
 function findPlacesNear( loc )
 {
+ 	if( already_working ) return;
+
 	// Can we find a place based on this location?
 	var map_bounds = map.getBounds();
     var placeApi = new google.maps.places.PlacesService(map);
@@ -341,7 +366,11 @@ function findPlacesNear( loc )
 		bounds: map_bounds,
         types: defaultTypes
 	};
+	
+	already_working = true;
+
     placeApi.search(searchRequest, function( r, s ){
+		already_working = false;
 		setStatus( "success", "Did I find you?", "findPlacesNear", function(){
 			console.log( "findPlacesNear - loc " +  loc);
 			console.log( "findPlacesNear - loc " +  defaultTypes );
