@@ -162,7 +162,11 @@ class Event( GeoLoc ):
 	where_addr		= db.StringProperty(multiline=True)
 	where_detail 	= db.StringProperty(multiline=True)
 	place			= db.ReferenceProperty( Place, collection_name="places")
-	
+
+class CMessage( db.Model ):
+		user_to		= db.ReferenceProperty( CUser, collection_name="users_to" )
+		content 	= db.StringProperty( multiline=True)
+		date_sent	= db.DateTimeProperty( auto_now_add=True)
 		
 
 def output_events():

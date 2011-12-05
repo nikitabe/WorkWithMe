@@ -6,6 +6,7 @@ from google.appengine.ext.webapp import util
 from google.appengine.ext.webapp import template
 import logging
 from django.utils import simplejson
+import json
 import models
 from google.appengine.ext import db
 from datetime import datetime
@@ -249,7 +250,10 @@ class Profile( MyPage ):
 
 		user.username = un
 		user.put()
-		self.response.out.write( "Update complete" )
+		
+		output = json.dumps( [user.username, "UpdateComplete"] );
+		
+		self.response.out.write( output )
 
 
 
@@ -354,6 +358,9 @@ class ConversationHandler( MyPage ):
 
 			message.to = target_user.email #"Albert Johnson <Albert.Johnson@example.com>"
 			message.body = self.request.get( 'message' )
+
+			m = models.CMessage( parent=user, user_to = target_user, content = message.body )
+			m.put()
 
 			message.send()
 			

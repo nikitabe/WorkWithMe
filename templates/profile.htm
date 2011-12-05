@@ -27,7 +27,10 @@ function submitUserInfo()
 		},
 		success: function( msg ){
 			$("#response").slideUp('fast', function(){
-				$("#response").removeClass("error").addClass("success").html( msg ).slideDown( 'slow');
+				var ar = JSON.parse( msg );
+				$("#nav_me a").attr( "href", "/user/" + ar[0]);
+				$("#nav_me").fadeIn();
+				$("#response").removeClass("error").addClass("success").html( "Your username has been updated.  Now <a href='/add'> <button class='btn primary'>update your status</button></a>. " ).slideDown( 'slow');
 				// TODO: set the link to the new username
 				// $("#nav_me").href( '/user/' + $("#username").val());			
 			});
@@ -36,6 +39,9 @@ function submitUserInfo()
 		);
 }
 	$(function(){
+		if( $("#nav_me a").attr( "href")  == "/user/" ){
+			$("#nav_me").fadeOut();
+		}
 		$("#profile_button").addClass( "active");
 		$("#submit_user").click( submitUserInfo );
 	});
