@@ -1,8 +1,8 @@
-function hide_errors()
+function hide_errors( func )
 {
 	$( "#who_name_error" ).slideUp( 'fast' );
 	$( "#address_box_error" ).slideUp( 'fast');
-	$( "#when_end_error" ).slideUp( 'fast');
+	$( "#when_end_error" ).slideUp( 'fast', func );
 	
 }
 
@@ -20,63 +20,74 @@ function test(){
 }
 
 function do_submit(){
-	hide_errors()
-	
-	var has_error = false;
-	// Perform validation
-	if( $( "#who_name" ).val() == "" ){
-		$( "#who_name_error" ).html( 'Please enter a name' ).slideDown( 'slow' );
-		has_error = true; 
-	}
+	hide_errors( function(){
+		var has_error = false;
+		// Perform validation
+		if( $( "#who_name" ).val() == "" ){
+			$( "#who_name_error" ).html( 'Please enter a name' ).slideDown( 'slow' );
+			has_error = true; 
+		}
 		
-	if( $( "#loc_geopt_lat" ).val() == "" || $( "#loc_geopt_lng" ).val() == "" ){
-		$( "#address_box_error" ).html("Your location is not properly set.  Please set your location.").slideDown( 'slow');
-		has_error = true;
-	}
+		if( $( "#loc_geopt_lat" ).val() == "" || $( "#loc_geopt_lng" ).val() == "" ){
+			$( "#address_box_error" ).html("Your location is not properly set.  Please set your location.").slideDown( 'slow');
+			has_error = true;
+		}
 
-	if( $( "#when_end" ).val() == "" ){
-		$( "#when_end_error" ).html("Please enter a time.").slideDown( 'slow');
-		has_error = true;
-	}
+		if( $( "#when_end" ).val() == "" ){
+			$( "#when_end_error" ).html("Please enter a time.").slideDown( 'slow');
+			has_error = true;
+		}
 	
-	if( has_error ) return false;
+		if( has_error ) return false;
 	
-	d_s = Date.parse( $( "#when_start" ).val() );
-	d_e = Date.parse( $( "#when_end" ).val() );
-		
-	$.ajax({
-	  url: "/add",
-	  type: "POST",
-	  data: { 
-		username: $( '#username' ).val(),
-		who_name: $( "#who_name" ).val(),
-		what: $( "#what" ).val(),
-		where_quick_name: $( "#where_quick_name" ).val(),
-		where_name: $( "#where_name" ).val(),
-		where_addr: $( "#where_addr" ).val(),
-		where_detail: $( "#where_detail" ).val(),
-		when_start: d_s.toISOString(),
-		when_end: 	d_e.toISOString(),
-		skill: $( "#skill" ).val(),
-		skill_neighbor: $( "#skill_neighbor" ).val(),
-		loc_geopt_lat: $( "#loc_geopt_lat" ).val(),
-		loc_geopt_lng: $( "#loc_geopt_lng" ).val(),
-		},
-	  success: function( msg ){
-		if( msg == "OK"){
-			if( $( '#username' ).val() ){
-				window.location.href = "/user/" + $( '#username' ).val();
-				return;
-			}
+		d_s = Date.parse( $( "#when_start" ).val() );
+		d_e = Date.parse( $( "#when_end" ).val() );
+	
+		w_e = "";
+		try{
+			w_e = d_e.toISOString();
+			console.log( 'w_e:' + w_e );
+		}
+		catch( err ){
+			$('#when_end_error').html("Please enter a time.  For example '5pm' or '1am'.").slideDown('slow');
+			has_error = true;
+		}
+		if( has_error ) return false;
+	
+		$.ajax({
+		  url: "/add",
+		  type: "POST",
+		  data: { 
+			username: $( '#username' ).val(),
+			who_name: $( "#who_name" ).val(),
+			what: $( "#what" ).val(),
+			where_quick_name: $( "#where_quick_name" ).val(),
+			where_name: $( "#where_name" ).val(),
+			where_addr: $( "#where_addr" ).val(),
+			where_detail: $( "#where_detail" ).val(),
+			when_start: d_s.toISOString(),
+			when_end: 	w_e,
+			skill: $( "#skill" ).val(),
+			skill_neighbor: $( "#skill_neighbor" ).val(),
+			loc_geopt_lat: $( "#loc_geopt_lat" ).val(),
+			loc_geopt_lng: $( "#loc_geopt_lng" ).val(),
+			},
+		  success: function( msg ){
+			if( msg == "OK"){
+				if( $( '#username' ).val() ){
+					window.location.href = "/user/" + $( '#username' ).val();
+					return;
+				}
 			
-    		$("#add_step").slideUp( 'fast', function(){
-    			$("#not_logged_in_success_message").slideDown( 'slow' );
-			});
-		}
-		else{
-	    		$("#out_str").html( msg );
-		}
-	  }
+	    		$("#add_step").slideUp( 'fast', function(){
+	    			$("#not_logged_in_success_message").slideDown( 'slow' );
+				});
+			}
+			else{
+		    		$("#out_str").html( msg );
+			}
+		  }
+		});
 	});
 }
 
