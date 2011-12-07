@@ -44,6 +44,10 @@ class MyPage( webapp.RequestHandler ):
 			})
 		else:
 			greeting = "<li><a href='%s'>Log In</a></li>" % users.create_login_url( self.request.uri )
+			template_vars.update( {
+				"login_url":users.create_login_url( self.request.uri )
+			})
+
 
 		template_vars.update( {
 			"greeting":greeting
@@ -192,7 +196,7 @@ class GetItems( webapp.RequestHandler ):
 		for e in events:
 			e_obj = e[1]
 
-			template_values = {'event':e_obj}
+			template_values = {'event':e_obj, 'link_for_map':1}
 			path = os.path.join( os.path.dirname(__file__), 'templates/event_snip.htm' )
 			event_html = template.render( path, template_values )
 
@@ -378,7 +382,7 @@ class ConversationHandler( MyPage ):
 		
 
 class TestHandler( MyPage ):
-	def get( self, username ):
+	def get( self ):
 		template_values = {} 
 		path = os.path.join( os.path.dirname( __file__ ), 'templates/test.htm')
 		self.response.out.write( template.render( path, template_values ))	
@@ -392,8 +396,8 @@ def main():
 	application = webapp.WSGIApplication( 
                                      [
 									  
-									  ('/', ComingSoon ),
-									  #('/', Browse ),
+									  #('/', ComingSoon ),
+									  ('/', Browse ),
 									  ('/event/(.*)', EventHandler),
                                       ('/browse', Browse ),
                                       ('/add', Add_event ),

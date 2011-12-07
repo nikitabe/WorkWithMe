@@ -10,15 +10,17 @@
 
 
 {% block head %}
-	<script type="text/javascript" src="/JS/date.js"></script>
     <script type="text/javascript">
 
 	$(function () {		
 		$("#run_test").click( function(){
+			$('#out').html( "Running" );
 			
 			var v = $('#in').val();
+			// $('#out').html( v );
 			var d_s = Date.parse( v );
 			$('#out').html( d_s.toString() );
+
 		});
 		
 	});
@@ -31,7 +33,10 @@
 {% endblock %}
 
 {% block main %}
-<input type="text" id="in" value="now"></input>
+<div class="statement">
+<input type="text" id="in" placeholder="now"></input>
+</div>
+<input type="text" id="in" placeholder="now"></input>
 <button id="run_test" class="btn">Go</button>
 <div id="out"></div>
 

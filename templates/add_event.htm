@@ -27,6 +27,11 @@
 		#searchResults .btn { margin:1px; padding:1px 2px 1px 2px}
 		#searchResults .address {margin-left:5px;}
 		#findMeBtn {float:right;}
+
+		.alert-message li{ color:white; }
+		.alert-message ul{ margin-bottom:0px; }
+		.alert-message a{ color:white; text-decoration:underline; }
+
 		.statement .wide {width:50%}
 		
 		.address_box {margin-top:2px; padding:5px; margin-right:15px;}
@@ -115,6 +120,7 @@
 {% endblock %}
 
 {% block main %}
+
 <div id="map-overlay" class="modal hide fade" style="display: none; ">
             <div class="modal-header">
               <a href="#" class="close">×</a>
@@ -151,10 +157,22 @@
           </div>
 
 
-<div class="statement">
+<div class="statement" id="add_step">
+{% if not user %}
+<div class="alert-message error">
+	While you can post without <a href="{{login_url}}">logging in</a>, why would you want to?  If you log in:
+	<ul>
+		<li>people will be able to send you emails</li>
+		<li>you'll be able to update/end your status</li>
+		<li>the site will remember your last status, so you don't have to type as much</li>
+		<li>I will buy you a drink once I have an income again</li>
+	</ul>
+	So why don't you <a href="{{login_url}}">log in</a>?  Come on...  it will take like 2 seconds...
+</div>
+{% endif %}
 
 	<div class="step">
- 	   Hi.  My <span class='emphasize'>name</span> is
+	   Hi.  My <span class='emphasize'>name</span> is
 			{% if not user %}
 	    		<input type="text" class="wide" id="who_name" name="who_name" placeholder="Mr. Awesome" value="{{old_event.who_name}}"></input>
 			{% else %}
@@ -213,6 +231,9 @@
     	<button class="btn" id="do_submit">Add</button>
 		<a href="/"><button class="btn">Cancel</button></a>
 	</div>
+</div>
+<div id="not_logged_in_success_message" class="alert-message success hide">
+	Thanks.  Your status has been posted.  Please consider logging in next time.  Seriously, a I'll buy you a drink...  I'll brew you something if I have to...
 </div>
 <div id="out_str"></div>
 

@@ -6,7 +6,7 @@ function hide_errors()
 	
 }
 
-function set_test_data(){
+function test(){
 	$( "#what" ).val( "test what");
 	$( "#where_quick_name" ).val( "test quickname" );
 	$( "#where_name" ).val( "test name" );
@@ -64,8 +64,14 @@ function do_submit(){
 		},
 	  success: function( msg ){
 		if( msg == "OK"){
-    		// $("#out_str").html( "The add went ok.  Implement redirect to /user/"  );
-			window.location.href = "/user/" + $( '#username' ).val();
+			if( $( '#username' ).val() ){
+				window.location.href = "/user/" + $( '#username' ).val();
+				return;
+			}
+			
+    		$("#add_step").slideUp( 'fast', function(){
+    			$("#not_logged_in_success_message").slideDown( 'slow' );
+			});
 		}
 		else{
 	    		$("#out_str").html( msg );

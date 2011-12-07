@@ -213,14 +213,14 @@ function find_location_via_address( address_txt, add_address_marker, found_item_
 					$( "#searchResults ul" ).append( "<li>" + str_info + "</li>" );
 
 					addAddressMarker( pos, info_window_str, r );
-					map.setCenter(pos);
+					map.panTo(pos);
 					
 					if( found_item_func ) found_item_func();
 				}
 			}
 
 			if( results.length > 0 )
-				map.setCenter( results[0].geometry.location );
+				map.panTo( results[0].geometry.location );
 
 			// map.fitBounds(dBounds);
 
@@ -327,7 +327,7 @@ function setMyPositionTo( lat, lng, where_name, where_addr )
 	$("#step_confirm").slideDown( 'slow' );
 	$("#searchResults").slideUp( 'fast');
 
-    map.setCenter( new google.maps.LatLng(lat,lng) );
+    map.panTo( new google.maps.LatLng(lat,lng) );
 	infowindow.close();
 }
 
@@ -380,6 +380,12 @@ function findPlacesNear( loc )
 	});	
 }
 
+function positionMapOn( lat, lng )
+{
+	var loc = new google.maps.LatLng(lat,lng);
+	map.panTo( loc );
+}
+
 function addMyMarker( loc, msg, complete_func )
 {
 	console.log( "addMyMarker: msg");
@@ -398,7 +404,7 @@ function addMyMarker( loc, msg, complete_func )
                 infowindow.open(map, myLocMarker);
             });
 
-    map.setCenter(myLoc);
+    map.panTo(myLoc);
     map.setZoom(default_zoom);
 
 	// Need to call listener because that is when the bounds actually change

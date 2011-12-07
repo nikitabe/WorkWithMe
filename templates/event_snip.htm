@@ -13,12 +13,16 @@
         {% endif %}
 		at
         <span class='item_prop'><a href="/place/{{event.place.lat}}/{{event.place.lon}}/{{event.place.place_name}}">{{event.place.place_name}}</a></span>
+		{% if link_for_map %}
+		<a onclick="positionMapOn( {{event.place.lat}}, {{event.place.lon}});">(map)</a>
+		{% endif %}
+<!--
         from 
         <span class='item_prop adjust_date'>{{event.when_start}}</span>
+-->
         until 
 
-        <span class='item_prop adjust_date'>{{event.when_end}}
-		</span>.
+        <span class='item_prop adjust_date'>{{event.when_end}}</span>.
 		
 		{% if event.where_detail %}
 		Will be 
