@@ -82,6 +82,7 @@ function centerOnAddress( address_txt, complete_func )
 
 // Single_item means that we are looking for one item rather than a list
 function searchFnc( complete_func ) {
+	$("#searchResults").slideUp( 'slow' );
 	setStatus( "working", 'Looking, searching, digging...', "searchFnc", function(){
 				
 	    $("#searchResults").html("");
@@ -139,11 +140,12 @@ function procPlaceSearchResponse( r, s ){
             var pid    = p.id;
             var pVicinity = p.vicinity;
             var address = pName + " " + pVicinity;
-            var extAddress = pType +": "+ address;
-			var title_str = pickMeStr( placeLoc.lat(), placeLoc.lng(), pName, pVicinity ) + "<a href='#"+address+"' class='address' onclick=\"showOnlyPlace('"+i+"');\">"+extAddress+"</a>";
+			pType = pType.replace( "_", " ");
+            var extAddress = "(" + pType +") "+ address;
+			var title_str = "<a href='#"+address+"' class='address' onclick=\"showOnlyPlace('"+i+"');\">"+extAddress+"</a>";
             var info_box_str = p.types[0] + ": " +p.name + ", " + p.vicinity + "<br/>" + pickMeStr( placeLoc.lat(), placeLoc.lng(), p.name, p.vicinity );
 
-			pStore += "<li>" + title_str + "</li>";
+			pStore += "<tr><td class='pickme'>" + pickMeStr( placeLoc.lat(), placeLoc.lng(), pName, pVicinity ) + "</td><td>" + title_str + "</td></tr>";
             
 			createMarker( p, info_box_str );
 			// dBounds.extend( placeLoc );
@@ -154,8 +156,9 @@ function procPlaceSearchResponse( r, s ){
 			map.setZoom( default_zoom );
 		}
         
-		$("#searchResults").html("<ul>"+pStore+"</ul>");
-		$("#searchResults").slideDown( 'slow');	
+		
+		$("#searchResults").html("<table class='condensed-table result_list'>"+pStore+"</table>" );
+		$("#searchResults").slideDown( 'slow');				
 		
 		setStatus( "success", "Found some places.  Please select the one where you are at.", "procPlaceSearchResponse" );
 		return true;
@@ -238,7 +241,7 @@ function find_location_via_address( address_txt, add_address_marker, found_item_
 
 function pickMeStr( lat, lng, name, addr )
 {
-	return " <div class='btn' onclick=\"setMyPositionTo(" + lat + "," + lng + ", '" + escape(name) + "', '" + escape(addr) + "')\">I am here</div>";
+	return " <button class='btn' onclick=\"setMyPositionTo(" + lat + "," + lng + ", '" + escape(name) + "', '" + escape(addr) + "')\">I am here</button>";
 }
 
 

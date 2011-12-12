@@ -4,7 +4,10 @@
 {% endblock %}
 
 {% block header %}
-<h1>Where is everyone?</h1>
+<h1>Where is everyone?
+	<small><br/>
+	Work next to interesting people. Let interesting people work next to you. 
+	</small></h1>
 {% endblock %}
 
 
@@ -44,6 +47,12 @@ function createEventMarker( lat, lng, message  )
 	return marker;	
 }
 
+function showHistory()
+{
+	$("#show_history").val( 1 );
+	findItems();
+}
+
 // This function tries to find everyone on the current map
 // and places them on the map
 function findItems(){
@@ -52,11 +61,15 @@ function findItems(){
 	
 	console.log( "findItems: looking for items around");
 	setStatus( "working", "Working...", "findItems", function(){
-
+	
+	var show_history = "";
+	if( $("#show_history").val() ){
+		show_history = "&show_history=1";
+	}
 	var bounds = map.getBounds();
 	// Make the AJAX call to get the items within bounds
 	$.ajax( {
-				url: "/get_items?bounds=" + bounds.toUrlValue(10) + '&json=1', 
+				url: "/get_items?bounds=" + bounds.toUrlValue(10) + show_history + '&json=1', 
 				dataType: 'json',
 				error: function(jqXHR, textStatus, errorThrown){
 						setStatus( "error", "There was an error: " + jqXHR + ", " + textStatus + ", "+ errorThrown, "findItems" );
@@ -138,7 +151,7 @@ $(function () {
 {% block main %}
 <div id="received" ></div>
 <div class="well" style="padding:10px">
-    <input type="text" class="span6" id="where" name="where" placeholder="Enter an address to search around..." />
+    <input type="text" class="span6" id="where" name="where" placeholder="Enter an address to see who is working on what..." />
 	<button class="btn primary" name="searchBtn" id="searchBtn" value="Search">Search</button>
 	<button class='btn' name='findMeBtn' id='findMeBtn' value='Find Me' onclick='findMeForBrowseAll()'>Find Me Again!</button>
 	{% comment %}	
@@ -164,11 +177,14 @@ $(function () {
 	<hr/>
 	<a href='/user/{{username}}'>
 		<button class="btn primary">Update Your Status</button>
-	</a>	
+	</a>
 {% else %}
 <a href="/add">
 	<button class="btn primary">Update Your Status</button>
 </a>
+<p style="margin-top:5px">
+So that people who are interested in what you do can sit next to you and work on their stuff. <a href="/about">Find out more...</a>	
+</p>
 {% endif %}
 
 <hr/>
@@ -184,4 +200,5 @@ $(function () {
 <div id="map_working" class="alert-message hidden info"   ></div>
 <div id="map_error"   class="alert-message hidden error"  ></div>
 </div>
+<input id="show_history" type='text' class="hide"></input>
 {% endblock %}

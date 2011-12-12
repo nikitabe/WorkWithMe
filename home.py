@@ -186,7 +186,11 @@ class GetItems( webapp.RequestHandler ):
 		
 		logging.info( "Searching for: lat_lo %s, lat_hi %s, lng_lo %s, lng_hi %s " % (lat_lo, lat_hi, lng_lo, lng_hi) )
 		
-		events = models.Event.queryArea( lat_lo, lng_lo, lat_hi, lng_hi, datetime.now( tz ) )
+		d = datetime.now( tz )
+		if( self.request.get('show_history') ):
+			d = None
+		
+		events = models.Event.queryArea( lat_lo, lng_lo, lat_hi, lng_hi, d )
 		
 		logging.info( "Search returned %s results" % len( events) )
 
@@ -285,7 +289,8 @@ class UserHandler( MyPage ):
 		user_to_view = None
 		user_is_me = False
 
-		
+		#decode username from params
+		username = username.replace( "%20", " " )
 		self.FirstInit()
 		logging.info( "username: " + username)
 		user_to_view = models.get_user_by_username( username )
@@ -387,6 +392,13 @@ class TestHandler( MyPage ):
 		path = os.path.join( os.path.dirname( __file__ ), 'templates/test.htm')
 		self.response.out.write( template.render( path, template_values ))	
 
+class AboutHandler( MyPage ):
+	def get( self ):
+		template_values = {} 
+		self.AddUserInfo( template_values )
+		path = os.path.join( os.path.dirname( __file__ ), 'templates/about.htm')
+		self.response.out.write( template.render( path, template_values ))	
+
 		
 class ComingSoon( webapp.RequestHandler ):
 	def get( self ):
@@ -410,7 +422,8 @@ def main():
 									  ('/user/(.*)', UserHandler),
 									  ('/test', TestHandler ),
 									  ('/conversation/(.*)', ConversationHandler),
-									  ('/conversation', ConversationHandler)
+									  ('/conversation', ConversationHandler),
+									  ('/about', AboutHandler)
                                       ], debug=True )
 	util.run_wsgi_app( application )
 

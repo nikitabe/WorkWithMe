@@ -140,7 +140,7 @@ class GeoLoc( db.Model ):
 		
 	@classmethod
 	def queryArea( self, lat_lo, lng_lo, lat_hi, lng_hi, t = None ):
-		return self.query( (lat_lo + lat_hi) / 2, (lng_lo + lng_hi) / 2, 10, (-3,0), t)
+		return self.query( (lat_lo + lat_hi) / 2, (lng_lo + lng_hi) / 2, 100, (-3,0), t)
 
 	
 class Place( GeoLoc ):

@@ -103,6 +103,7 @@
         <div class="container">
           <a class="brand" href="/">WorkWithMe</a>
           <ul class="nav">
+			<li id="nav_about"><a href="/about">About</a></li>
 			<li id="nav_browse"><a href="/browse">Everyone</a></li>
 			{% if user and username %}
 			<li id="nav_me"><a href='/user/{{username}}'>Me</a></li>
@@ -140,8 +141,9 @@
 			</div>
           </div>
           <div class="span4">
+			<!--
 			<div class="alert-message success">FF errors fixed.  Still ironing things out.  <a href="mailto:me@nikitab.com"><font color="white"><u>Let me know</u></font></a> if stuff breaks.</div><hr/>
-			
+			-->
 			{% block right_col %}
 			{% endblock %}
           </div>
