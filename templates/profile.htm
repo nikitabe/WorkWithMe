@@ -27,11 +27,13 @@ function submitUserInfo()
 		},
 		success: function( msg ){
 			$("#response").slideUp('fast', function(){
-				var ar = JSON.parse( msg );
+				window.location.href = "/";
+				
+/*				var ar = JSON.parse( msg );
 				$("#nav_me a").attr( "href", "/user/" + ar[0]);
 				$("#nav_me").fadeIn();
 				$("#response").removeClass("error").addClass("success").html( "Your username has been updated.  Now <a href='/add'> <button class='btn primary'>update your status</button></a>. " ).slideDown( 'slow');
-				// TODO: set the link to the new username
+*/				// TODO: set the link to the new username
 				// $("#nav_me").href( '/user/' + $("#username").val());			
 			});
 		}

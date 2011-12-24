@@ -4,8 +4,9 @@ var map,
 	my_loc_marker = 0,
 	info_window = 0,
 	listener_handle = 0,
-    defaultTypes = 'store gym cafe food bar street_address point_of_interest floor intersection natural_feature point_of_interest post_box premise room street_address street_number subpremise transit_station'.split(" "),
-	places_list = [];
+    defaultTypes = 'store gym cafe food bar coworking street_address point_of_interest floor intersection natural_feature point_of_interest post_box premise room street_address street_number subpremise transit_station'.split(" "),
+	places_list = [],
+	lookup_place = [];
 
 var CLEAR_ALL = 0x0,
 	CLEAR_ME = 0x1,
@@ -23,6 +24,8 @@ function map_init_resources( div_id )
             zoom: default_zoom
         });
 
+	geocoder = new google.maps.Geocoder();
+
 	info_window = new google.maps.InfoWindow();
 
 }
@@ -35,10 +38,22 @@ function clear_my_loc()
 	}	
 }
 
+function find_address_by_loc( loc, func )
+{
+	if( already_working) return;
+	already_working = true;
+    geocoder.geocode( { 'latLng': loc }, function(results, stat) {
+		already_working = false;
+    	if (stat == google.maps.GeocoderStatus.OK) {
+			if( results [0] )
+				func( results[0].formatted_address );
+		}
+    });	
+}
+
 function map_center_on_me( complete_func )
 {
 	if( already_working ) return;
-	clear_my_loc();
 	
 	setStatus( "working", 'Looking for you...', "map_center_on_me", function(){
 		clear_my_loc();
@@ -52,8 +67,12 @@ function map_center_on_me( complete_func )
 									var myLoc = new google.maps.LatLng( 
 																	pos.coords.latitude, 
 																	pos.coords.longitude );
-																		
-									add_marker_me( myLoc, "", complete_func );
+																	
+									
+									find_address_by_loc( myLoc, function( addr ){
+										add_marker_me( myLoc, addr, "", complete_func );
+									} );									
+									
 								   }, 
 								function( error ){
 									already_working = false;
@@ -84,9 +103,9 @@ function add_marker( loc, icon, msg )
 	return marker;
 }
 
-function add_marker_me( loc, msg, compelte_func )
+function add_marker_me( loc, address, msg, compelte_func )
 {
-	add_place_marker( loc, "", "", "", msg, 0, true );
+	add_place_marker( loc, "", address, "", msg, 0, true );
 
     map.panTo( loc );
     map.setZoom( default_zoom );
@@ -119,6 +138,7 @@ function clear_place_markers( type )
 				(type & CLEAR_WITHOUT_USERS && places_list[i].num_users == 0 ) ){ 
 			m = places_list[i].marker;
 	        m.setMap(null);
+			lookup_place[places_list[i].id] = 0;
 			places_list.splice( i, 1 );
 		}
     }
@@ -176,9 +196,7 @@ function add_place_marker( loc, name, address, type, comment,  num_users, i_am_h
 		"<div class='map_info_place_name'><a href='/place/" + loc.lat() + "/" + loc.lng() + "/" + name + "'>" + name + "</a></div>" + 
 		"<div class='map_info_address'>" + address + "</div>";		
 
-	if( !i_am_here ){
-		info_str += pickMeStr(loc, name, address );		
-	}
+	info_str += pickMeStr(loc, name, address );		
 
 	console.log( "add_place_marker: " + loc + " num: " + num_users );
 	
@@ -194,11 +212,31 @@ function add_place_marker( loc, name, address, type, comment,  num_users, i_am_h
 		marker_icon = icon_color + "_MarkerA.png";		
 	}
 	
-	marker = add_marker( loc, marker_icon, info_str );
+	
+	var place_id = get_place_id( loc, name );
+	
+	if( lookup_place[place_id] ){
+		marker = lookup_place[place_id];
+	}
+	else{
+		marker = add_marker( loc, marker_icon, info_str );
+		if( i_am_here ) my_loc_marker = marker;
+		else{
+			var place_obj = new Object;
+			place_obj.marker = marker;
+			place_obj.num_users = num_users;
+			place_obj.id = place_id;
+			
+			places_list.push( place_obj );
+			lookup_place[place_id] = place_obj;
+		} 		
+	}
 
-	if( i_am_here ) my_loc_marker = marker;
-	else places_list.push( {marker:marker, num_users:num_users} );
 
 	return marker;
 }
 
+function get_place_id( loc, name )
+{
+	return "" + loc.lat() + "|" + loc.lng() + "|" + name;
+}

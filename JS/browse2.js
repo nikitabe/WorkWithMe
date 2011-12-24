@@ -19,14 +19,19 @@ $(function () {
 	// Need to call listener because that is when the bounds actually change
 	// Not using bounds_changed because http://stackoverflow.com/questions/4338490/google-map-event-bounds-changed-triggered-multiple-times-when-dragging
 	google.maps.event.addListener(map, 'dragend', find_users_on_map );
-	google.maps.event.addListener(map, 'zoom_changed', find_users_on_map );
+	google.maps.event.addListener(map, 'zoom_changed', function(){
+														if( !already_working){
+															already_working = true;
+															setTimeout("find_users_on_map()", 500);
+														}
+													} );
 
 });
 
 function search_for_stuff()
 {
 	clear_place_markers( CLEAR_WITHOUT_USERS );
-	find_places( $("#where").val(), process_places_result, find_address );
+	find_places( $("#where").val(), process_places_result, find_via_address );
 	// First search places
 		// If place is found, display
 		// If place is not found, search using address
@@ -34,7 +39,7 @@ function search_for_stuff()
 	
 }
 
-function find_address()
+function find_via_address()
 {
 	
 }
@@ -63,7 +68,7 @@ function add_event( id, event_html )
 
 function find_users_on_map()
 {
-	if( already_working == true ) return; 
+	already_working = false;
 	console.log( "aw = " + already_working );
 	
 	clear_place_markers( CLEAR_WITH_USERS );

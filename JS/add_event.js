@@ -74,14 +74,15 @@ function do_submit(){
 			},
 		  success: function( msg ){
 			if( msg == "OK"){
-				if( $( '#username' ).val() ){
+				window.location.href = "/";
+/*				if( $( '#username' ).val() ){
 					window.location.href = "/user/" + $( '#username' ).val();
 					return;
 				}
 			
 	    		$("#add_step").slideUp( 'fast', function(){
 	    			$("#not_logged_in_success_message").slideDown( 'slow' );
-				});
+				});*/	
 			}
 			else{
 		    		$("#out_str").html( msg );

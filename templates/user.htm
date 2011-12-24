@@ -44,6 +44,7 @@ $(function(){
 		{% endif %}
 	<div class="alert-actions">
 	{% if user_is_me %}
+		<a class="btn" href="/" title="View where you are and where everyone is on the map.">View Map</a>
 		{% if events %}
 		<form id="me_done_button" action="/user/{{user.username}}/closeout" method="post">
 			<input class="btn" type="submit" value="I am done" />
