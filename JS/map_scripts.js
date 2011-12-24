@@ -4,7 +4,7 @@ var map,
 	my_loc_marker = 0,
 	info_window = 0,
 	listener_handle = 0,
-    defaultTypes = 'store gym cafe food bar coworking street_address point_of_interest floor intersection natural_feature point_of_interest post_box premise room street_address street_number subpremise transit_station'.split(" "),
+    defaultTypes = 'store gym cafe food bar office street_address point_of_interest floor intersection natural_feature point_of_interest post_box premise room street_address street_number subpremise transit_station'.split(" "),
 	places_list = [],
 	lookup_place = [];
 
@@ -226,11 +226,27 @@ function map_find_places( sTxt, func_success, func_none_found ){
 			already_working = false;
 			if( google.maps.places.PlacesServiceStatus.OK && r.length > 0 ){
 				// We found places!  Let's pass them for processing.
-				func_success( r, s );
+				func_success( r, s, false );
 			} 
 			else{
-				// We didn't find anything.  Let's look elsewhere
-				func_none_found();
+				already_working = true;
+				// Second iteration attempt
+			    var searchRequest = {
+			        name: sTxt,
+					location: map.getCenter(),
+					radius: 50000
+					};
+			    placeApi.search(searchRequest, function( r, s ){			    
+					already_working = false;
+					if( google.maps.places.PlacesServiceStatus.OK && r.length > 0 ){
+						// We found places!  Let's pass them for processing.
+						func_success( r, s, true );
+					} 
+					else{
+						// We didn't find anything.  Let's look elsewhere
+						func_none_found();
+					}
+				} );
 			}
 		});
 }

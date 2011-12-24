@@ -130,35 +130,40 @@ class Add_event( MyPage ):
 			 	return
 			old_event = models.Event.all().filter( "user =", user.key()).order( "-when_end").get()
 
+		if old_event == None:
+			old_event = models.Event()
+			temp_place = models.Place()
+			temp_place.put()
+			old_event.place = temp_place.key()
+
 		if len(lat) > 0:
-			if old_event == None:
-				old_event = models.Event()
-				temp_place = models.Place()
-				temp_place.put()
-				old_event.place = temp_place.key()
 
 			old_event.place.place_name = self.request.get('name') 
 			old_event.place.lat = float( lat )
 			old_event.place.lon = float( self.request.get('lon') )
 
-
 			old_event.lat = float( lat )
 			old_event.lon = float( self.request.get('lon') )
 			old_event.where_addr = self.request.get('addr')
 
-		if old_event.what == "None":
+		if old_event.who_name == "None" or old_event.who_name == None:
+			old_event.who_name = ""
+		if old_event.what == "None" or old_event.what == None:
 			old_event.what = ""
-		if old_event.skill == "None":
+		if old_event.skill == "None" or old_event.skill == None:
 			old_event.skill = ""
-		if old_event.skill_neighbor == "None":
+		if old_event.skill_neighbor == "None" or old_event.skill_neighbor == None:
 			old_event.skill_neighbor = ""
-		if old_event.where_detail == "None":
+		if old_event.where_detail == "None" or old_event.where_detail == None:
 			old_event.where_detail = ""
+
+		logging.info( "----> %s " % old_event.what )
 			
-		if old_event:		
+		if old_event:
 			template_values.update( {
 				"old_event":old_event
 				})
+				
 		
 		self.AddUserInfo( template_values )
 		path = os.path.join( os.path.dirname(__file__), 'templates/add_event2.htm' )

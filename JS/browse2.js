@@ -30,7 +30,7 @@ $(function () {
 
 function search_for_stuff()
 {
-	// clear_place_markers( CLEAR_WITHOUT_USERS );
+	clear_place_markers( CLEAR_WITHOUT_USERS );
 	$( "#search_results" ).slideUp('fast', function(){
 		$( "#search_results" ).html( "" );					
 		map_find_places( $("#where").val(), process_places_result, find_via_address );	
@@ -42,8 +42,9 @@ function find_via_address()
 	map_find_via_address( $("#where").val(), process_address_result, found_nothing )
 }
 
-function process_places_result( result_list, s )
+function process_places_result( result_list, s, expand_bounds )
 {
+	var bounds = map.getBounds();
 	// Cycle through all results and add them to the map as appropriate
     for (var i = 0; i < result_list.length; i++) {
 		var p = result_list[i];
@@ -52,11 +53,14 @@ function process_places_result( result_list, s )
 		 	name = p.name,
 			type = p.types[0],
 			address = p.vicinity;
+		
+		bounds.extend( loc );
 			
 		var place_id = get_place_id( loc, name ); 
 		
 		if( lookup_place[place_id] ){
-			displayPlaceByID( place_id );
+			if( result_list.length == 1 )
+				displayPlaceByID( place_id );
 		}
 		else{			
 			add_place_marker( loc, name, address, type, "", 0, false );
@@ -67,8 +71,10 @@ function process_places_result( result_list, s )
 		"<div class='map_info_place_name'><a onclick=\"displayPlaceByID('" + place_id + "')\">" + name + "</a></div>" + 
 				"<div class='map_info_address'>" + address + "</div>" + 
 		"</td></tr>" );
-
 	}
+	if( expand_bounds )
+		map.fitBounds( bounds );
+
 	$( "#search_results" ).slideDown('slow');
 	
 }
