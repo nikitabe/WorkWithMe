@@ -16,6 +16,7 @@ from datetime import tzinfo
 from models import tz 
 from google.appengine.ext.webapp.util import run_wsgi_app
 
+#check out geodjango
 
 from google.appengine.api import mail
 
@@ -90,6 +91,23 @@ class Browse( MyPage ):
 		path = os.path.join( os.path.dirname(__file__), 'templates/browse_all.htm' )
 		self.response.out.write( template.render( path, template_values ))
 
+
+class Browse2( MyPage ):
+
+	def get( self ):
+		self.FirstInit()
+		template_values = {}
+
+		user = models.get_current_user()
+		if( user ):
+			my_events = user.get_events( False )
+			template_values.update( { "my_events" : my_events })
+
+		self.AddUserInfo( template_values )
+		path = os.path.join( os.path.dirname(__file__), 'templates/browse2.htm' )
+		self.response.out.write( template.render( path, template_values ))
+
+
 def fixDate( str ):
     if str.lower() == "now":
         return datetime.now( tz )
@@ -102,22 +120,43 @@ class Add_event( MyPage ):
 		self.FirstInit()
 		template_values = {}
 
-
+		lat = self.request.get('lat')
+		old_event = None
+		temp_place = None
 		user = models.get_current_user()
 		if user:
 			if not user.username:
 				self.redirect( '/profile')          
 			 	return
 			old_event = models.Event.all().filter( "user =", user.key()).order( "-when_end").get()
-			if old_event:				
-				template_values.update( {
-					"old_event":old_event
-					})		
-		
+
+		if len(lat) > 0:
+			if old_event == None:
+				old_event = models.Event()
+				temp_place = models.Place()
+				temp_place.put()
+				old_event.place = temp_place.key()
+
+			old_event.place.place_name = self.request.get('name') 
+			old_event.place.lat = float( lat )
+			old_event.place.lon = float( self.request.get('lon') )
+
+
+			old_event.lat = float( lat )
+			old_event.lon = float( self.request.get('lon') )
+			old_event.where_addr = self.request.get('addr')
+
+		if old_event:		
+			template_values.update( {
+				"old_event":old_event
+				})
 		
 		self.AddUserInfo( template_values )
-		path = os.path.join( os.path.dirname(__file__), 'templates/add_event.htm' )
+		path = os.path.join( os.path.dirname(__file__), 'templates/add_event2.htm' )
 		self.response.out.write( template.render( path, template_values ))
+		
+		if temp_place :
+			temp_place.delete()
 	def post( self ):
 		n = self.request.get('who_name')
 		logging.info( len( n ) )
@@ -216,6 +255,7 @@ class GetItems( webapp.RequestHandler ):
 					'where_loc_lat': e_obj.lat,  
 					'where_loc_lng': e_obj.lon,  
 					'place_name': e_obj.place.place_name,	
+					'place_type': e_obj.place.place_type,	
 					'where_addr': e_obj.where_addr,	
 					'where_detail': e_obj.where_detail,
 					'event_html': event_html					
@@ -409,9 +449,10 @@ def main():
                                      [
 									  
 									  #('/', ComingSoon ),
-									  ('/', Browse ),
+									  ('/', Browse2 ),
 									  ('/event/(.*)', EventHandler),
-                                      ('/browse', Browse ),
+                                      ('/browse_old', Browse ),
+									  ('/browse', Browse2 ),
                                       ('/add', Add_event ),
 									  ('/home', Home ),
 									  ('/get_items', GetItems ),

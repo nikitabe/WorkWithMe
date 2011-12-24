@@ -18,7 +18,7 @@ GEOBOX_CONFIGS = (
   (1, 5, False),
   (0, 5, False),
   (-1, 5, False),
-  (-2, 5, False),
+  (-2, 5, True ),
 )
 
 ZERO = timedelta(0)
@@ -145,6 +145,7 @@ class GeoLoc( db.Model ):
 	
 class Place( GeoLoc ):
 	place_name 		= db.StringProperty( multiline=False )
+	place_type		= db.StringProperty( multiline=False )  # not entered into the place yet.  Need to fix
 	
 # Let's define the data model first
 class Event( GeoLoc ):

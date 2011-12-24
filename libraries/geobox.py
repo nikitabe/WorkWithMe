@@ -148,7 +148,7 @@ def earth_distance(lat1, lon1, lat2, lon2):
 def _round_slice_down(coord, slice):
   try:
     remainder = coord % slice
-    if coord > 0:
+    if coord >= 0:
       return coord - remainder + slice
     else:
       return coord - remainder
@@ -158,9 +158,10 @@ def _round_slice_down(coord, slice):
     # already rounded down as far as we can go.
     return coord
 
+#print "running %s " % _round_slice_down( .73, 1 )
 
 def compute_tuple(lat, lon, resolution, slice):
-	logging.info( "compute_tuple1: Lat %s, lon %s, res %s, slice %s" % (lat, lon, resolution, slice ) )
+	print "compute_tuple1: Lat %s, lon %s, res %s, slice %s" % (lat, lon, resolution, slice )
 	"""Computes the tuple Geobox for a coordinate with a resolution and slice."""
 	if( resolution > 0 ):
 		decimal.getcontext().prec = resolution + 3
@@ -168,16 +169,18 @@ def compute_tuple(lat, lon, resolution, slice):
 		lon = decimal.Decimal(str(lon))
 		slice = decimal.Decimal(str(1.0 * slice * 10 ** -resolution))
 	else:
-		lat = lat - lat % (10 ** resolution)
-		lon = lon - lon % (10 ** resolution)
-		slice = 1.0 * slice * 10 ** -resolution
-
-	logging.info( "compute_tuple2: Lat %s, lon %s, res %s, slice %s" % (lat, lon, resolution, slice ) )
+		lat = decimal.Decimal( str(lat) )
+		lon = decimal.Decimal( str(lon) )
+		lat = lat - lat % (10 ** -resolution)
+		lon = lon - lon % (10 ** -resolution)
+		slice = decimal.Decimal( str( 1.0 * slice * 10 ** -resolution ) )
 
 	adjusted_lat = _round_slice_down(lat, slice)
 	adjusted_lon = _round_slice_down(lon, slice)
-	return (adjusted_lat, adjusted_lon - slice,
-	        adjusted_lat - slice, adjusted_lon)
+
+	logging.info( "adj_Lat %s => %s, adj_lon %s => %s" % (lat, adjusted_lat, lon, adjusted_lon ) )
+	return (adjusted_lat,         adjusted_lon - slice,
+	        adjusted_lat - slice, adjusted_lon         )
 
 
 def format_tuple(values, resolution):
@@ -212,7 +215,6 @@ def compute_set(lat, lon, resolution, slice):
 
   return geobox_values
 
-
 def test():
   tests = [
     (("37.78452", "-122.39532", 6, 10), "37.784530|-122.395330|37.784520|-122.395320"),
@@ -223,12 +225,16 @@ def test():
     (("37.78452", "-122.39532", 4, 17), "37.7859|-122.3966|37.7842|-122.3949"),
     (("37.78452", "-122.39531", 4, 17), "37.7859|-122.3966|37.7842|-122.3949"),
     (("37.78452", "-122.39667", 4, 17), "37.7859|-122.3983|37.7842|-122.3966"),
+    (("37.78452", "-122.39667", 0, 5), "40|-125|35|-120"),
+    (("37.78452", "-122.39667", -1, 5), "50|-150|0|-100"),
+    (("37.78452", "-122.39667", -2, 5), "500|-500|0|0"),
   ]
   for args, expected in tests:
-    print "Testing compute%s, expecting %s" % (args, expected)
+    print "Testing compute %s, expecting %s" % (args, expected)
     value = compute(*args)
     assert value == expected, "Found: " + value
-  
+  print 'testing complete'
+  return
   expected = sorted([
     '37.784500|-122.395350|37.784475|-122.395325',
     '37.784500|-122.395325|37.784475|-122.395300',
@@ -238,11 +244,11 @@ def test():
     '37.784525|-122.395300|37.784500|-122.395275',
     '37.784550|-122.395350|37.784525|-122.395325',
     '37.784550|-122.395325|37.784525|-122.395300',
-    '37.784550|-122.395300|37.784525|-122.395275'
+    '37.784550|-122.395300|37.784525|-122.395275',
   ])
   print "Testing compute_set, expecting %s" % expected
   value = sorted(compute_set("37.78452", "-122.39532", 6, 25))
-  assert value == expected, "Failed, found: " + value
+  assert value == expected, "Failed, found: %s" % value
   print "Tests passed"
 
 

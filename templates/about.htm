@@ -1,0 +1,65 @@
+{% extends "base.htm" %}
+
+{% block nav%}
+
+{% endblock %}
+
+{% block head %}
+<style>
+.about_panel p {color:gray}
+.about_panel li {color:gray}
+</style>
+<script type="text/javascript">
+$(function(){
+	$('#nav_about').addClass("active");
+});
+</script>
+{% endblock %}
+
+{% block header %}
+<h1>About WorkWithMe
+	
+	</h1>
+{% endblock %}
+
+{% block main %}
+<div class="about_panel">
+<h3>Working Together</h3>
+<p>
+	WorkWithMe is a site that lets you find where people are working so that you can work next to them, or 
+	lets you share what you are working on, where, and when so that others can join you.
+</p>
+<h3>Why?</h3>
+<p>	
+	Whether you are a developer, a designer, a student, a lawyer, an artist - it is always nice to work in good company. So because...
+	<ul>
+		<li>you can get help from people when you are stuck.</li>
+		<li>you can help others when they run into problems.</li>
+		<li>it's a good way to meet new people.</li>
+		<li>it's a good way to find people to collaborate with.</li>
+		<li>it's better than going to networking events.</li>
+		<li>it's fun.</li>
+		</ul>
+	</p>
+<h3>What is coworking?</h3>
+<p>
+	Coworking is a new trend.  It started a while ago and is basically a bunch of people who cowork from the same location. 
+	Originally, people would work at cafes, in someone's office or home, or perhaps during the day at a restaurant. However,
+	recently, there has been an amazing emergence of coworking spaces dedicated to the idea of coworking.  Personally, I feel that
+	quite often office-shares are presented as coworking, but who am I to question semantics...
+</p>
+<p>
+	If you are looking for coworking resources, you may want to check out:
+	<ul>
+		<li><a href="http://www.loosecubes.com">LooseCubes.com</a> - a site that lets you find coworking spaces.</li>
+		<li><a href="http://www.worksnug.com">WorkSnug.com</a> - find cafes/places where you could drop anchor.</li>
+			
+	</ul>
+</p>
+
+</div>
+{% endblock %}
+
+{% block right_col %}
+For more questions: <br/><a href="mailto:nikitab@workwithme.org">shoot me an email</a>.
+{% endblock %}
