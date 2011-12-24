@@ -30,18 +30,16 @@ $(function () {
 
 function search_for_stuff()
 {
-	clear_place_markers( CLEAR_WITHOUT_USERS );
-	find_places( $("#where").val(), process_places_result, find_via_address );
-	// First search places
-		// If place is found, display
-		// If place is not found, search using address
-			// Display output
-	
+	// clear_place_markers( CLEAR_WITHOUT_USERS );
+	$( "#search_results" ).slideUp('fast', function(){
+		$( "#search_results" ).html( "" );					
+		map_find_places( $("#where").val(), process_places_result, find_via_address );	
+	});
 }
 
 function find_via_address()
 {
-	
+	map_find_via_address( $("#where").val(), process_address_result, found_nothing )
 }
 
 function process_places_result( result_list, s )
@@ -54,9 +52,64 @@ function process_places_result( result_list, s )
 		 	name = p.name,
 			type = p.types[0],
 			address = p.vicinity;
+			
+		var place_id = get_place_id( loc, name ); 
 		
-		add_place_marker( loc, name, address, type, "", 0, false );
+		if( lookup_place[place_id] ){
+			displayPlaceByID( place_id );
+		}
+		else{			
+			add_place_marker( loc, name, address, type, "", 0, false );
+		}
+
+		// This is probably wrong.  Selector should be UL under #searchResults
+		$( "#search_results" ).append( "<tr><td>" + 
+		"<div class='map_info_place_name'><a onclick=\"displayPlaceByID('" + place_id + "')\">" + name + "</a></div>" + 
+				"<div class='map_info_address'>" + address + "</div>" + 
+		"</td></tr>" );
+
 	}
+	$( "#search_results" ).slideDown('slow');
+	
+}
+
+function process_address_result( result_list, s )
+{
+	
+    var dBounds = new google.maps.LatLngBounds();
+	for( j in result_list ){
+		var r = result_list[j];
+		var address = r.formatted_address; 
+		var loc = r.geometry.location;
+		
+		// This is probably wrong.  Selector should be UL under #searchResults
+		$( "#search_results" ).append( "<tr><td>" + address + "</td></tr>" );
+
+		var place_id = get_place_id( loc, name ); 
+		if( lookup_place[place_id] ){
+			displayPlaceByID( place_id );
+		}
+		else{			
+			add_place_marker( loc, "", address, "", "", 0, false );
+		}
+
+	}
+
+	$( "#search_results" ).slideDown('slow');
+	map.panTo( result_list[0].geometry.location );
+	find_users_on_map();
+
+	// map.fitBounds(dBounds);
+
+	if( map.getZoom() > default_zoom )
+		map.setZoom( default_zoom );
+
+	// $("#searchResults").slideDown( 'slow');
+}
+
+function found_nothing()
+{
+	setStatus( "error", "Didn't find anything :(", "found_nothing()");
 }
 
 function add_event( id, event_html )
@@ -71,7 +124,7 @@ function find_users_on_map()
 	already_working = false;
 	console.log( "aw = " + already_working );
 	
-	clear_place_markers( CLEAR_WITH_USERS );
+	//clear_place_markers( CLEAR_WITH_USERS );
 	
 	
 	$( "#events_table tr" ).slideUp( 'slow' );
@@ -99,7 +152,7 @@ function find_users_on_map()
 					},
 				success: function( items_json ){
 					//$("#received").html( "he: " + items_json );
-					clear_place_markers( CLEAR_WITH_USERS );
+					// clear_place_markers( CLEAR_WITH_USERS );
 					var locations = eval( items_json );
 					
 					for( var loc in locations ){

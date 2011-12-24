@@ -44,6 +44,7 @@
 		.find_loc_btn { float:right; margin-right:40px;}
         .step {margin-top:4px;}
 		.gray { color:gray;}
+		.optional {}
 		</style>
     <!--
     <script type="text/javascript"
@@ -83,58 +84,9 @@
 	
 	$(function () {		
 		$("#nav_post").addClass( "active");
-
-	    $("#do_submit").click( do_submit );
-		
-		
-		// Initialize map buttons	
-	    $("#searchBtn").click( function () {
-	        searchFnc();
-	    });
-
-		$("#where").keydown( function(event){
-			if (event.keyCode == '13') {
-				searchFnc();
-			}
-		});
-		
-		$('#find_loc_button').click( function(){
-			showFindPlace( true, function(){
-				init_map_stuff();
-			  	findMeForAdd();				
-			} );
-		  
-		});
-		
-		$('#btn_map_note_here').click( function(){
-			applyMyNewPosition();
-			showFindPlace( false );
-			
-			$( "#address_box_error" ).slideUp( 'fast');
-		});
-
-		$('#btn_map_cancel').click( function(){
-			showFindPlace( false );
-		});
-		
-		
+	    $("#do_submit").click( do_submit );		
 	});
 
-	function showFindPlace( do_show, func ){
-		var s = "#add_step", 
-			h = "#find_place";
-			
-		if( do_show ){
-			s = "#find_place";
-			h = "#add_step";
-		}
-		
-		console.log
-		$( h ).slideUp( 'slow', function(){
-		 	$( s ).slideDown( 'slow', func );
-		});
-		
-	}
 	</script>
 {% endblock %}
 
@@ -186,38 +138,38 @@
 		</div>
 	</div>
 	
-
-	<div class="step">
-	    I'll be <input type="text" class="wide" id="where_detail" name="where_detail" placeholder="stuck between a piano and a barista" value="{{old_event.where_detail}}" />.
-		<input type="hidden" id="loc_geopt_lat" name="loc_geopt_lat" value="{{old_event.lat}}"></input>
-		<input type="hidden" id="loc_geopt_lng" name="loc_geopt_lng" value="{{old_event.lon}}"></input>
-		<input type="hidden" id="username" name="username" value="{{username}}"></input>
-	</div>
-
-	<div class="step">
-    I'll be
-    <input type="text" class="wide" id="what" name="what" value="{{old_event.what}}"placeholder="coding/designing/brainstorming up a storm"></input>.
-	</div>
-	
 	<div class="step">
 	I'll be there from now 
     <input type="hidden" id="when_start" name="when_start" value='now' placeholder="start time"></input>
     until
     <input type="text" id="when_end" name="when_end" placeholder="1pm"></input>
-	<div class="alert-message error hide" id="when_end_error"></div>
     .
 	</div>
 	<div id="when_end_error" class="hide alert-message error"></div>
+
+	<div class="optional">
+		<div class="step">
+		    I'll be <input type="text" class="wide" id="where_detail" name="where_detail" placeholder="stuck between a piano and a barista" value="{{old_event.where_detail}}" />.
+			<input type="hidden" id="loc_geopt_lat" name="loc_geopt_lat" value="{{old_event.lat}}"></input>
+			<input type="hidden" id="loc_geopt_lng" name="loc_geopt_lng" value="{{old_event.lon}}"></input>
+			<input type="hidden" id="username" name="username" value="{{username}}"></input>
+		</div>
+
+		<div class="step">
+	    I'll be
+	    <input type="text" class="wide" id="what" name="what" value="{{old_event.what}}"placeholder="coding/designing/brainstorming up a storm"></input>.
+		</div>
 	
-	<div class="step">
-    	I <span class='emphasize'>know</span> 
-    	<input type="text" class="wide" id="skill" name="skill" value="{{old_event.skill}}" placeholder="design, PHP, juggling..."></input>
-    .
-	</div>
+		<div class="step">
+	    	I <span class='emphasize'>know</span> 
+	    	<input type="text" class="wide" id="skill" name="skill" value="{{old_event.skill}}" placeholder="design, PHP, juggling..."></input>
+	    .
+		</div>
 	
-	<div class="step">
-		I'd like to <span class='emphasize'>sit next to</span>
-    	<input type="text" class="wide" id="skill_neighbor" name="skill_neighbor" value="{{old_event.skill_neighbor}}" placeholder="designers, hot girls, therapists..."></input>.
+		<div class="step">
+			I'd like to <span class='emphasize'>sit next to</span>
+	    	<input type="text" class="wide" id="skill_neighbor" name="skill_neighbor" value="{{old_event.skill_neighbor}}" placeholder="designers, hot girls, therapists..."></input>.
+		</div>
 	</div>
 	
 	<div class="step">

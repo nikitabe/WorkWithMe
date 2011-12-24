@@ -146,6 +146,15 @@ class Add_event( MyPage ):
 			old_event.lon = float( self.request.get('lon') )
 			old_event.where_addr = self.request.get('addr')
 
+		if old_event.what == "None":
+			old_event.what = ""
+		if old_event.skill == "None":
+			old_event.skill = ""
+		if old_event.skill_neighbor == "None":
+			old_event.skill_neighbor = ""
+		if old_event.where_detail == "None":
+			old_event.where_detail = ""
+			
 		if old_event:		
 			template_values.update( {
 				"old_event":old_event

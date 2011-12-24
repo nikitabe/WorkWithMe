@@ -21,7 +21,8 @@ function map_init_resources( div_id )
     map = new google.maps.Map( document.getElementById( div_id ), {
             mapTypeId: google.maps.MapTypeId.ROADMAP,
             center: pi0,
-            zoom: default_zoom
+            zoom: default_zoom,
+			scrollwheel: false
         });
 
 	geocoder = new google.maps.Geocoder();
@@ -121,66 +122,18 @@ function add_marker_me( loc, address, msg, compelte_func )
 	});	
 }
 
-function center_on_me_not_found( error )
-{
-    setStatus( "error", "Can't find you :( <button class='btn' name='findMeBtn'' id='findMeBtn' value='Find Me' onclick='map_center_on_me()'>Try Again!</button>");
-}
-
-function clear_place_markers( type )
-{	
-	console.log( "Clearing: " + type );
-	if( type & CLEAR_ALL || type & CLEAR_ME ) clear_my_loc();
-	
-	
-    for(var i=places_list.length - 1;i>=0;i--) {
-		if( type & CLEAR_ALL || 
-				(type & CLEAR_WITH_USERS && places_list[i].num_users > 0 ) || 
-				(type & CLEAR_WITHOUT_USERS && places_list[i].num_users == 0 ) ){ 
-			m = places_list[i].marker;
-	        m.setMap(null);
-			lookup_place[places_list[i].id] = 0;
-			places_list.splice( i, 1 );
-		}
-    }
-	old_list = places_list;
-}
-
-function find_places( sTxt, func_success, func_none_found ){
-	if( already_working ) return;
-	already_working = true;
-
-	var map_bounds = map.getBounds();
-    var placeApi = new google.maps.places.PlacesService(map);
-    var searchRequest = {
-        name: sTxt,
-        types: defaultTypes,
-		bounds: map_bounds
-		};
-    placeApi.search(searchRequest, function( r, s ){
-			already_working = false;
-			if( !google.maps.places.PlacesServiceStatus.OK ){
-				// We didn't find anything.  Let's look elsewhere
-				func_none_found();
-			} 
-			else{
-				// We found places!  Let's pass them for processing.
-				func_success( r, s );
-			}
-		});
-}
-
-function setMyPositionTo( lat, lon, name, addr )
-{
-	window.location = "/add?lat="+lat+"&lon="+lon+"&name="+name+"&addr="+addr;
-}
-
-function pickMeStr( loc, name, addr )
-{
-	return " <button class='btn' onclick=\"setMyPositionTo(" + loc.lat() + "," + loc.lng() + ", '" + escape(name) + "', '" + escape(addr) + "')\">I am here</button>";
-}
-
 function add_place_marker( loc, name, address, type, comment,  num_users, i_am_here )
 {
+	var place_id = get_place_id( loc, name );
+	if( lookup_place[place_id] ){
+		var old = lookup_place[place_id];
+		if( old.num_users != num_users ){
+			old.marker.setMap( null );
+			lookup_place[place_id] = 0;
+		}
+		else return;
+	}
+	
 	var person_str = num_users ? 
 						( ( num_users == 1 )  ? "person" : "people" ) 
 						: "";
@@ -200,18 +153,16 @@ function add_place_marker( loc, name, address, type, comment,  num_users, i_am_h
 
 	console.log( "add_place_marker: " + loc + " num: " + num_users );
 	
-	icon_color = "brown";
-	if( i_am_here ) icon_color = "red";
-	else if( num_users > 0 ) icon_color = "blue";
-		
-	if( num_users > 0 ){
-		if( num_users > 9 ) num_users = "X";
-		marker_icon = icon_color + "_Marker" + num_users + ".png";
-	}
+	if( i_am_here ) marker_icon = "marker_me.png";
 	else{
-		marker_icon = icon_color + "_MarkerA.png";		
+		if( num_users > 0 ){
+			if( num_users > 9 ) num_users = "X";
+			marker_icon = "darkGreen_Marker" + num_users + ".png";
+		}
+		else{
+			marker_icon = "blue_MarkerP.png";		
+		}
 	}
-	
 	
 	var place_id = get_place_id( loc, name );
 	
@@ -236,7 +187,89 @@ function add_place_marker( loc, name, address, type, comment,  num_users, i_am_h
 	return marker;
 }
 
+function center_on_me_not_found( error )
+{
+    setStatus( "error", "Can't find you :( <button class='btn' name='findMeBtn'' id='findMeBtn' value='Find Me' onclick='map_center_on_me()'>Try Again!</button>");
+}
+
+function clear_place_markers( type )
+{	
+	console.log( "Clearing: " + type );
+	if( type & CLEAR_ALL || type & CLEAR_ME ) clear_my_loc();
+	
+	
+    for(var i=places_list.length - 1;i>=0;i--) {
+		if( type & CLEAR_ALL || 
+				(type & CLEAR_WITH_USERS && places_list[i].num_users > 0 ) || 
+				(type & CLEAR_WITHOUT_USERS && places_list[i].num_users == 0 ) ){ 
+			m = places_list[i].marker;
+	        m.setMap(null);
+			lookup_place[places_list[i].id] = 0;
+			places_list.splice( i, 1 );
+		}
+    }
+	old_list = places_list;
+}
+
+function map_find_places( sTxt, func_success, func_none_found ){
+	if( already_working ) return;
+	already_working = true;
+
+	var map_bounds = map.getBounds();
+    var placeApi = new google.maps.places.PlacesService(map);
+    var searchRequest = {
+        name: sTxt,
+        types: defaultTypes,
+		bounds: map_bounds
+		};
+    placeApi.search(searchRequest, function( r, s ){
+			already_working = false;
+			if( google.maps.places.PlacesServiceStatus.OK && r.length > 0 ){
+				// We found places!  Let's pass them for processing.
+				func_success( r, s );
+			} 
+			else{
+				// We didn't find anything.  Let's look elsewhere
+				func_none_found();
+			}
+		});
+}
+
+function map_find_via_address( sTxt, func_success, func_none_found ){
+	if( already_working ) return;
+	already_working = true;
+    geocoder.geocode( { 'address': sTxt }, function(r, s ) {
+		already_working = false;
+    	if (s == google.maps.GeocoderStatus.OK && r.length > 0 ) {
+			func_success( r, s );
+		}
+		else{
+			func_none_found();
+		}
+    });
+}
+
+function setMyPositionTo( lat, lon, name, addr )
+{
+	window.location = "/add?lat="+lat+"&lon="+lon+"&name="+name+"&addr="+addr;
+}
+
+function pickMeStr( loc, name, addr )
+{
+	return " <button class='btn' onclick=\"setMyPositionTo(" + loc.lat() + "," + loc.lng() + ", '" + escape(name) + "', '" + escape(addr) + "')\">I am here</button>";
+}
+
+function displayPlaceByID( place_id )
+{
+	if( lookup_place[place_id] ){
+		marker = lookup_place[place_id].marker;
+		map.panTo( marker.getPosition() );
+		google.maps.event.trigger( marker, 'click'); 
+	}
+}
+
 function get_place_id( loc, name )
 {
-	return "" + loc.lat() + "|" + loc.lng() + "|" + name;
+	//return "" + loc.lat() + "|" + loc.lng() + "|" + name;
+	return "" + loc.lat() + "|" + loc.lng();
 }

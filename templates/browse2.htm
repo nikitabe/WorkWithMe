@@ -35,7 +35,7 @@
 {% block main %}
 	<div id="received" ></div>
 	<div class="well" style="padding:10px">
-	    <input type="text" class="span6" id="where" name="where" placeholder="Enter an address to see who is working on what..." />
+	    <input type="text" class="span6" id="where" name="where" placeholder="Cafe, restaurant, 123 Some St. 12345..." />
 		<button class="btn primary" name="searchBtn" id="searchBtn" value="Search">Search</button>
 		<button class='btn' name='findMeBtn' id='findMeBtn' value='Find Me' onclick='map_center_on_me( find_users_on_map );'>Find Me Again!</button>
 		{% comment %}	
@@ -55,6 +55,12 @@
 {% endblock %}
 
 {% block right_col %}
+<div class="status">
+<div id="map_success" class="alert-message hidden "></div>
+<div id="map_working" class="alert-message hidden info"   ></div>
+<div id="map_error"   class="alert-message hidden error"  ></div>
+</div>
+<hr/>
 {% if my_events %}
 	{% for event in my_events %}
 		{% include "event_snip.htm" %}
@@ -75,12 +81,11 @@ See where everyone is or post your status so that you people know where you are.
 	<button class="btn">Subscribe to our Newsletter!</button>
 </a>
 <!-- \\ MAILCHIMP SUBSCRIBE LINK // -->
+<br/>
+&nbsp;
 
-<hr/>
-<div class="status">
-<div id="map_success" class="alert-message hidden success"></div>
-<div id="map_working" class="alert-message hidden info"   ></div>
-<div id="map_error"   class="alert-message hidden error"  ></div>
-</div>
 <input id="show_history" type='text' class="hide"></input>
+<table id="search_results">
+</table>
+
 {% endblock %}

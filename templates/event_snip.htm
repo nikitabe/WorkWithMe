@@ -12,10 +12,13 @@
         <span class='item_prop'>{{event.what}}</span>
         {% endif %}
 		at
-        <span class='item_prop'><a href="/place/{{event.place.lat}}/{{event.place.lon}}/{{event.place.place_name}}">{{event.place.place_name}}</a></span>
+        <span class='item_prop'>
 		{% if link_for_map %}
-		<a onclick="positionMapOn( {{event.place.lat}}, {{event.place.lon}});">(map)</a>
+		<a onclick="displayPlaceByID( get_place_id( new google.maps.LatLng({{event.place.lat}}, {{event.place.lon}}), '{{event.place.place_name}}' ) );">
+		{% else %}
+		<a href="/place/{{event.place.lat}}/{{event.place.lon}}/{{event.place.place_name}}">
 		{% endif %}
+		{{event.place.place_name}}</a></span>
 <!--
         from 
         <span class='item_prop adjust_date'>{{event.when_start}}</span>
