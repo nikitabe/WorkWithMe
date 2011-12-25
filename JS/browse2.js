@@ -18,23 +18,46 @@ $(function () {
 		
 	// Need to call listener because that is when the bounds actually change
 	// Not using bounds_changed because http://stackoverflow.com/questions/4338490/google-map-event-bounds-changed-triggered-multiple-times-when-dragging
-	google.maps.event.addListener(map, 'dragend', find_users_on_map );
+	google.maps.event.addListener(map, 'dragend', onDragAround );
 	google.maps.event.addListener(map, 'zoom_changed', function(){
 														if( !already_working){
 															already_working = true;
-															setTimeout("find_users_on_map()", 500);
+															setTimeout("onDragAround()", 500);
 														}
 													} );
 
 });
 
+function onDragAround()
+{
+	find_users_on_map();
+	if( $("#where").val().length > 0 )
+		perform_search();
+}
+
 function search_for_stuff()
 {
 	clear_place_markers( CLEAR_WITHOUT_USERS );
+	if( $("#where").val().length > 0 )
+		perform_search();
+}
+
+function perform_search()
+{
 	$( "#search_results" ).slideUp('fast', function(){
 		$( "#search_results" ).html( "" );					
 		map_find_places( $("#where").val(), process_places_result, find_via_address );	
 	});
+	var bounds = map.getBounds()
+	for( i in places_list ){
+		var m = places_list[i];
+		if( bounds.contains(m.marker.getPosition()) == false ){
+			m.marker.setMap( null );
+			lookup_place[m.id] = 0;
+			places_list.splice( i, 1 );
+		}
+	}
+	
 }
 
 function find_via_address()
@@ -57,6 +80,7 @@ function process_places_result( result_list, s, expand_bounds )
 		bounds.extend( loc );
 			
 		var place_id = get_place_id( loc, name ); 
+		// console.log( "Found place: " + name + " at " + place_id + " lat: " + loc.lat() + " lon: " + loc.lng() );
 		
 		if( lookup_place[place_id] ){
 			if( result_list.length == 1 )
@@ -92,6 +116,8 @@ function process_address_result( result_list, s )
 		$( "#search_results" ).append( "<tr><td>" + address + "</td></tr>" );
 
 		var place_id = get_place_id( loc, name ); 
+		// console.log( "Found address: %s at %s: " % (name, place_id) );
+
 		if( lookup_place[place_id] ){
 			displayPlaceByID( place_id );
 		}

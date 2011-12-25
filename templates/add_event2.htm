@@ -39,7 +39,7 @@
 
 		.address_box input {border:0;-webkit-box-shadow:none;color:gray;font-size:9pt;}
 		.place_name {font-weight:bold; padding-bottom:0px; margin-bottom:0px;}
-		.place_address {padding-top:0px; margin-top:0px;}
+		.place_address {padding-top:0px; margin-top:0px; margin-bottom:0px; padding-bottom:0px}
 		
 		.find_loc_btn { float:right; margin-right:40px;}
         .step {margin-top:4px;}
@@ -131,8 +131,12 @@
 	<div class="step" >
 	    I'll be at 
 		<div class="address_box well">
+			{% if old_event.place.place_name %}
 			<input type="text" class="wide place_name" id="where_name" name="where_name" value="{{old_event.place.place_name}}" readonly />
 	    	<br/>
+			{% else %}
+			<input type="text" class="wide" id="where_name" name="where_name" value="{{old_event.place.place_name}}" placeholder="What's this place? Home? Office?" />
+			{% endif %}
 			<input type="text" class="wide place_address" id="where_addr" name="where_addr" value="{{old_event.where_addr}}" readonly/>
 			<div id="address_box_error" class="hide alert-message error" style="margin-bottom:0"></div>
 		</div>

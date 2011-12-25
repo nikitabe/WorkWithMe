@@ -2,6 +2,7 @@ var map,
 	default_zoom = 15,
 	already_working = false,
 	my_loc_marker = 0,
+	my_loc_circle = null,
 	info_window = 0,
 	listener_handle = 0,
     defaultTypes = 'store gym cafe food bar office street_address point_of_interest floor intersection natural_feature point_of_interest post_box premise room street_address street_number subpremise transit_station'.split(" "),
@@ -34,9 +35,10 @@ function map_init_resources( div_id )
 function clear_my_loc()
 {
 	if( my_loc_marker ){
-		my_loc_marker.setMap( null );
+		my_loc_marker.marker.setMap( null );
 		my_loc_marker = 0;
-	}	
+		my_loc_circle = null;
+	}
 }
 
 function find_address_by_loc( loc, func )
@@ -55,7 +57,8 @@ function find_address_by_loc( loc, func )
 function map_center_on_me( complete_func )
 {
 	if( already_working ) return;
-	
+
+	console.log( "centering on me");
 	setStatus( "working", 'Looking for you...', "map_center_on_me", function(){
 		clear_my_loc();
 	    if (navigator &&
@@ -85,14 +88,14 @@ function map_center_on_me( complete_func )
 	});
 }
 
-function add_marker( loc, icon, msg )
+function add_marker( loc, icon, msg, z_index )
 {
 	var marker = new google.maps.Marker({
 		map: map,
 		position: loc,
 		animation: google.maps.Animation.DROP,
 		icon: '/images/markers/' + icon,
-		zIndex: -1
+		zIndex: z_index
     });
 
     google.maps.event.addListener(marker, 'click',
@@ -104,8 +107,26 @@ function add_marker( loc, icon, msg )
 	return marker;
 }
 
+function DrawCircle( loc, rad )
+{
+    if (my_loc_circle != null) {
+        my_loc_circle.setMap(null);
+    }
+    my_loc_circle = new google.maps.Circle({
+        center: loc,
+        radius: rad,
+        strokeColor: "#FF0000",
+        strokeOpacity: 0.4,
+        strokeWeight: 0.5,
+        fillColor: "#FF0000",
+        fillOpacity: 0.15	,
+        map: map
+    });
+}
+
 function add_marker_me( loc, address, msg, compelte_func )
 {
+	DrawCircle( loc, 100 );
 	add_place_marker( loc, "", address, "", msg, 0, true );
 
     map.panTo( loc );
@@ -153,15 +174,15 @@ function add_place_marker( loc, name, address, type, comment,  num_users, i_am_h
 
 	console.log( "add_place_marker: " + loc + " num: " + num_users );
 	
-	if( i_am_here ) marker_icon = "marker_me.png";
+	if( num_users > 0 ){
+		marker_color = "darkgreen";
+		if( i_am_here ) marker_color = "red"; 
+		if( num_users > 9 ) num_users = "X";
+		marker_icon = marker_color + "_Marker" + num_users + ".png";
+	}
 	else{
-		if( num_users > 0 ){
-			if( num_users > 9 ) num_users = "X";
-			marker_icon = "darkGreen_Marker" + num_users + ".png";
-		}
-		else{
-			marker_icon = "blue_MarkerP.png";		
-		}
+		if( i_am_here ) marker_icon = "marker_me.png";
+		else marker_icon = "blue_MarkerP.png";		
 	}
 	
 	var place_id = get_place_id( loc, name );
@@ -170,17 +191,20 @@ function add_place_marker( loc, name, address, type, comment,  num_users, i_am_h
 		marker = lookup_place[place_id];
 	}
 	else{
-		marker = add_marker( loc, marker_icon, info_str );
-		if( i_am_here ) my_loc_marker = marker;
-		else{
-			var place_obj = new Object;
-			place_obj.marker = marker;
-			place_obj.num_users = num_users;
-			place_obj.id = place_id;
-			
+		var z_index = 10;
+		if( i_am_here ) z_index = 5;
+		
+		marker = add_marker( loc, marker_icon, info_str, z_index );
+
+		var place_obj = new Object;
+		place_obj.marker = marker;
+		place_obj.num_users = num_users;
+		place_obj.id = place_id;
+		
+		if( !i_am_here ){
 			places_list.push( place_obj );
 			lookup_place[place_id] = place_obj;
-		} 		
+		}
 	}
 
 
