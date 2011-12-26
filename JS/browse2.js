@@ -30,24 +30,27 @@ $(function () {
 
 function onDragAround()
 {
+	console.log( "onDragAround");
 	find_users_on_map();
 	if( $("#where").val().length > 0 )
-		perform_search();
+		perform_search( false );
 }
 
 function search_for_stuff()
 {
 	clear_place_markers( CLEAR_WITHOUT_USERS );
 	if( $("#where").val().length > 0 )
-		perform_search();
+		perform_search( true );
 }
 
-function perform_search()
+function perform_search( adjust_map )
 {
 	$( "#search_results" ).slideUp('fast', function(){
 		$( "#search_results" ).html( "" );					
-		map_find_places( $("#where").val(), process_places_result, find_via_address );	
+		map_find_places( $("#where").val(), adjust_map, process_places_result, find_via_address );	
 	});
+	
+	// Clean up invisible markers
 	var bounds = map.getBounds()
 	for( i in places_list ){
 		var m = places_list[i];
@@ -60,14 +63,15 @@ function perform_search()
 	
 }
 
-function find_via_address()
+function find_via_address( adjust_map )
 {
-	map_find_via_address( $("#where").val(), process_address_result, found_nothing )
+	map_find_via_address( $("#where").val(), adjust_map, process_address_result, found_nothing )
 }
 
-function process_places_result( result_list, s, expand_bounds )
+function process_places_result( result_list, s, adjust_map )
 {
 	var bounds = map.getBounds();
+	var place_id = "";
 	// Cycle through all results and add them to the map as appropriate
     for (var i = 0; i < result_list.length; i++) {
 		var p = result_list[i];
@@ -82,11 +86,7 @@ function process_places_result( result_list, s, expand_bounds )
 		var place_id = get_place_id( loc, name ); 
 		// console.log( "Found place: " + name + " at " + place_id + " lat: " + loc.lat() + " lon: " + loc.lng() );
 		
-		if( lookup_place[place_id] ){
-			if( result_list.length == 1 )
-				displayPlaceByID( place_id );
-		}
-		else{			
+		if( !lookup_place[place_id] ){
 			add_place_marker( loc, name, address, type, "", 0, false );
 		}
 
@@ -96,17 +96,23 @@ function process_places_result( result_list, s, expand_bounds )
 				"<div class='map_info_address'>" + address + "</div>" + 
 		"</td></tr>" );
 	}
-	if( expand_bounds )
+
+
+	if( adjust_map ){
 		map.fitBounds( bounds );
+		if( result_list.length == 1 ){
+			displayPlaceByID( place_id );
+		}
+	}
 
 	$( "#search_results" ).slideDown('slow');
 	
 }
 
-function process_address_result( result_list, s )
+function process_address_result( result_list, s, adjust_map )
 {
-	
     var dBounds = new google.maps.LatLngBounds();
+	var place_id = "";
 	for( j in result_list ){
 		var r = result_list[j];
 		var address = r.formatted_address; 
@@ -115,28 +121,30 @@ function process_address_result( result_list, s )
 		// This is probably wrong.  Selector should be UL under #searchResults
 		$( "#search_results" ).append( "<tr><td>" + address + "</td></tr>" );
 
-		var place_id = get_place_id( loc, name ); 
+		place_id = get_place_id( loc, name ); 
 		// console.log( "Found address: %s at %s: " % (name, place_id) );
 
-		if( lookup_place[place_id] ){
-			displayPlaceByID( place_id );
-		}
-		else{			
+
+		if( !lookup_place[place_id] ){
 			add_place_marker( loc, "", address, "", "", 0, false );
 		}
 
 	}
 
+	if( result_list.length == 1 && adjust_map ){
+		displayPlaceByID( place_id );
+	}
+
 	$( "#search_results" ).slideDown('slow');
-	map.panTo( result_list[0].geometry.location );
+	if( adjust_map ){
+		map.panTo( result_list[0].geometry.location );
+
+		if( map.getZoom() > default_zoom )
+			map.setZoom( default_zoom );
+	}
+	
 	find_users_on_map();
 
-	// map.fitBounds(dBounds);
-
-	if( map.getZoom() > default_zoom )
-		map.setZoom( default_zoom );
-
-	// $("#searchResults").slideDown( 'slow');
 }
 
 function found_nothing()

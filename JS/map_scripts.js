@@ -235,7 +235,7 @@ function clear_place_markers( type )
 	old_list = places_list;
 }
 
-function map_find_places( sTxt, func_success, func_none_found ){
+function map_find_places( sTxt, adjust_map, func_success, func_none_found ){
 	if( already_working ) return;
 	already_working = true;
 
@@ -250,7 +250,7 @@ function map_find_places( sTxt, func_success, func_none_found ){
 			already_working = false;
 			if( google.maps.places.PlacesServiceStatus.OK && r.length > 0 ){
 				// We found places!  Let's pass them for processing.
-				func_success( r, s, false );
+				func_success( r, s, false );  // If we found places constrained to these bounds, no need to adjust
 			} 
 			else{
 				already_working = true;
@@ -264,24 +264,24 @@ function map_find_places( sTxt, func_success, func_none_found ){
 					already_working = false;
 					if( google.maps.places.PlacesServiceStatus.OK && r.length > 0 ){
 						// We found places!  Let's pass them for processing.
-						func_success( r, s, true );
+						func_success( r, s, adjust_map );
 					} 
 					else{
 						// We didn't find anything.  Let's look elsewhere
-						func_none_found();
+						func_none_found( adjust_map );
 					}
 				} );
 			}
 		});
 }
 
-function map_find_via_address( sTxt, func_success, func_none_found ){
+function map_find_via_address( sTxt, adjust_map, func_success, func_none_found ){
 	if( already_working ) return;
 	already_working = true;
     geocoder.geocode( { 'address': sTxt }, function(r, s ) {
 		already_working = false;
     	if (s == google.maps.GeocoderStatus.OK && r.length > 0 ) {
-			func_success( r, s );
+			func_success( r, s, adjust_map );
 		}
 		else{
 			func_none_found();

@@ -1,12 +1,11 @@
 		<span class='item_prop'>
 			{% if event.user.username %}
 			<a href='/user/{{event.user.username}}'>
-				{{event.who_name}}
-			</a>
+				{{event.who_name}}</a></span>
 			{% else %}
-				{{event.who_name}}
+				{{event.who_name}}</span>
 			{% endif %}
-		</span>
+		
         is 
 		{% if event.what %}
         <span class='item_prop'>{{event.what}}</span>
@@ -14,9 +13,9 @@
 		at
         <span class='item_prop'>
 		{% if link_for_map %}
-		<a onclick="displayPlaceByID( get_place_id( new google.maps.LatLng({{event.place.lat}}, {{event.place.lon}}), '{{event.place.place_name}}' ) );">
+		<a onclick="displayPlaceByID( get_place_id( new google.maps.LatLng({{event.place.lat}}, {{event.place.lon}}), '' ) );">
 		{% else %}
-		<a href="/place/{{event.place.lat}}/{{event.place.lon}}/{{event.place.place_name}}">
+		<a href="/place/{{event.place.lat}}/{{event.place.lon}}/{{event.place.place_name|urlencode}}">
 		{% endif %}
 			{% if event.place.place_name %}
 				{{event.place.place_name}}</a></span>
