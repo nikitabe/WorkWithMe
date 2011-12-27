@@ -164,6 +164,7 @@ class Event( GeoLoc ):
 	where_detail 	= db.StringProperty(multiline=True)
 	place			= db.ReferenceProperty( Place, collection_name="places")
 
+# Message that is sent between users
 class CMessage( db.Model ):
 		user_to		= db.ReferenceProperty( CUser, collection_name="users_to" )
 		content 	= db.StringProperty( multiline=True)
