@@ -169,7 +169,6 @@ class CMessage( db.Model ):
 		content 	= db.StringProperty( multiline=True)
 		date_sent	= db.DateTimeProperty( auto_now_add=True)
 		
-
 def output_events():
 	events = Event.all()
 	for e in events:
