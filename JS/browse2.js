@@ -194,6 +194,7 @@ function find_users_on_map()
 					//$("#received").html( "he: " + items_json );
 					// clear_place_markers( CLEAR_WITH_USERS );
 					var locations = eval( items_json );
+					var dynamic_event_id = 0;
 					
 					for( var loc in locations ){
 
@@ -207,10 +208,11 @@ function find_users_on_map()
 						add_place_marker( coords, items[0].place_name, items[0].where_addr, items[0].place_type, "", items.length, false );
 						
 						for( e_ind in items ){
-							add_event( "event_" + items[e_ind].event_id, items[e_ind].event_html );
+							// event_id is not correctly set on the backend.  Fix that if you want to use it.
+							add_event( "event_" + dynamic_event_id++ /*items[e_ind].event_id*/, items[e_ind].event_html );
 						}
-						adjust_dates();
 					} 
+					adjust_dates();
 					already_working = false;
 					console.log( "setting to false");
 					setStatus( "success", "Looking for people in the area completed.", "findItems" );
