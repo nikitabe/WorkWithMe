@@ -167,9 +167,7 @@ function find_users_on_map()
 	//clear_place_markers( CLEAR_WITH_USERS );
 	
 	
-	$( "#events_table tr" ).slideUp( 'slow' );
-	$( "#events_table" ).html( "" );
-	
+	$( "#events_table" ).html( "<tr><td>Loading...</td></tr>" );
 	console.log( "find_users_on_map: looking for items around");
 	setStatus( "working", "Working...", "findItems", function(){
 	
@@ -182,42 +180,43 @@ function find_users_on_map()
 	already_working = true;
 	// Make the AJAX call to get the items within bounds
 	$.ajax( {
-				url: "/get_items?bounds=" + bounds.toUrlValue(10) + show_history + '&json=1', 
-				dataType: 'json',
-				error: function(jqXHR, textStatus, errorThrown){
-						already_working = false;
-						console.log( "setting to false");
-
-						setStatus( "error", "There was an error: " + jqXHR + ", " + textStatus + ", "+ errorThrown, "findItems" );
-					},
-				success: function( items_json ){
-					//$("#received").html( "he: " + items_json );
-					// clear_place_markers( CLEAR_WITH_USERS );
-					var locations = eval( items_json );
-					var dynamic_event_id = 0;
-					
-					for( var loc in locations ){
-
-						
-						var coordinates = loc.split( "|");
-						var items = locations[loc];
-						var coords = new google.maps.LatLng( 
-														coordinates[0], 
-														coordinates[1] );
-
-						add_place_marker( coords, items[0].place_name, items[0].where_addr, items[0].place_type, "", items.length, false );
-						
-						for( e_ind in items ){
-							// event_id is not correctly set on the backend.  Fix that if you want to use it.
-							add_event( "event_" + dynamic_event_id++ /*items[e_ind].event_id*/, items[e_ind].event_html );
-						}
-					} 
-					adjust_dates();
+			url: "/get_items?bounds=" + bounds.toUrlValue(10) + show_history + '&json=1', 
+			dataType: 'json',
+			error: function(jqXHR, textStatus, errorThrown){
 					already_working = false;
 					console.log( "setting to false");
-					setStatus( "success", "Looking for people in the area completed.", "findItems" );
+
+					setStatus( "error", "There was an error: " + jqXHR + ", " + textStatus + ", "+ errorThrown, "findItems" );
+				},
+			success: function( items_json ){
+				//$("#received").html( "he: " + items_json );
+				// clear_place_markers( CLEAR_WITH_USERS );
+				$( "#events_table" ).html( "" );
+				var locations = eval( items_json );
+				var dynamic_event_id = 0;
+				
+				for( var loc in locations ){
+					
+					var coordinates = locations[loc][0].split( "|");
+					var items = locations[loc][1];
+					var coords = new google.maps.LatLng( 
+													coordinates[1], 
+													coordinates[2] );
+
+					add_place_marker( coords, items[0].place_name, items[0].where_addr, items[0].place_type, "", items.length, false );
+					
+					for( e_ind in items ){
+						// event_id is not correctly set on the backend.  Fix that if you want to use it.
+						add_event( "event_" + dynamic_event_id++ /*items[e_ind].event_id*/, items[e_ind].event_html );
+					}
 				} 
-			});
+				adjust_dates();
+				already_working = false;
+				console.log( "setting to false");
+				setStatus( "success", "Looking for people in the area completed.", "findItems" );
+			} 
+		});
 	} );
+
 	return true;
 }

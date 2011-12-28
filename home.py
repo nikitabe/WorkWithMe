@@ -247,11 +247,15 @@ class GetItems( webapp.RequestHandler ):
 		
 		logging.info( "Search returned %s results" % len( events) )
 
+		for e in events:
+			logging.info( "out: event.who_name = %s, d = %d" % ( e[1].who_name, e[0] ))
+
 		
 		# This is inefficient
 		locations = {}
 		for e in events:
 			e_obj = e[1]
+			distance = e[0]
 
 			template_values = {'event':e_obj, 'link_for_map':1}
 			path = os.path.join( os.path.dirname(__file__), 'templates/event_snip.htm' )
@@ -276,7 +280,7 @@ class GetItems( webapp.RequestHandler ):
 			}
 			
 			
-			k = "%s|%s" % (e_obj.lat, e_obj.lon)
+			k = "%s|%s|%s" % (distance, e_obj.lat, e_obj.lon)
 			
 			right_list = locations.get( k )
 			if right_list:
@@ -289,8 +293,13 @@ class GetItems( webapp.RequestHandler ):
 		#for e in events:
 		#	e_obj = e[1]
 		#	output_objects.append( out_obj )
-			
-		output = simplejson.dumps(locations);
+		sorted_keys = locations.keys()
+		sorted_keys = sorted( sorted_keys )
+		output_array = []
+		for key in sorted_keys:
+			output_array.append( (key, locations[key]) )
+
+		output = simplejson.dumps(output_array);
 			#output += "%s|" %e[1].key()
 
 		self.response.out.write( output + " " )

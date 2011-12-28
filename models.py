@@ -116,7 +116,7 @@ class GeoLoc( db.Model ):
 				# logging.info( "datetime: " + t.strftime("%A, %d. %B %Y %I:%M%p") )
 				query.filter( "when_end >=", t )
 			results = query.fetch( 50 );
-			# logging.info("Found %d results", len(results))
+			# logging.info("Found %d: ", len(results))
 			for result in results:
 				if result.key() not in found_events:
 					found_events[result.key()] = result	

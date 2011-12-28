@@ -303,8 +303,13 @@ function displayPlaceByID( place_id )
 {
 	if( lookup_place[place_id] ){
 		marker = lookup_place[place_id].marker;
+
+		old_bounds = map.getBounds()
 		map.panTo( marker.getPosition() );
-		google.maps.event.trigger( marker, 'click'); 
+		google.maps.event.trigger( marker, 'click');
+		
+		if( old_bounds != map.getBounds() )
+			onDragAround() 
 	}
 }
 
