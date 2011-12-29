@@ -131,14 +131,18 @@
 	<div class="step" >
 	    I'll be at 
 		<div class="address_box well">
-			{% if old_event.place.place_name %}
-			<input type="text" class="wide place_name" id="where_name" name="where_name" value="{{old_event.place.place_name}}" readonly />
-	    	<br/>
+			{% if old_event.lat %}
+				{% if old_event.place.place_name %}
+				<input type="text" class="wide place_name" id="where_name" name="where_name" value="{{old_event.place.place_name}}" readonly />
+		    	<br/>
+				{% else %}
+				<input type="text" class="wide" id="where_name" name="where_name" value="{{old_event.place.place_name}}" placeholder="What's this place? Home? Office?" />
+				{% endif %}
+				<input type="text" class="wide place_address" id="where_addr" name="where_addr" value="{{old_event.where_addr}}" readonly/>
+				<div id="address_box_error" class="hide alert-message error" style="margin-bottom:0"></div>
 			{% else %}
-			<input type="text" class="wide" id="where_name" name="where_name" value="{{old_event.place.place_name}}" placeholder="What's this place? Home? Office?" />
+				<div id="address_box_error" class="alert-message error" style="margin-bottom:0">Please select your location on the <a href="/"><button class="btn" >map</button></a> first.</div>				
 			{% endif %}
-			<input type="text" class="wide place_address" id="where_addr" name="where_addr" value="{{old_event.where_addr}}" readonly/>
-			<div id="address_box_error" class="hide alert-message error" style="margin-bottom:0"></div>
 		</div>
 	</div>
 	
