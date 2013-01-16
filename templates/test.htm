@@ -12,20 +12,31 @@
 
 
 {% block head %}
+
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+
     <script type="text/javascript">
+    var map;
+	$(function () {	
 
-	$(function () {		
-		$("#run_test").click( function(){
-			$('#out').html( "Running" );
-			
-			var v = $('#in').val();
-			// $('#out').html( v );
-			var d_s = Date.parse( v );
-			$('#out').html( d_s.toString() );
+/*      var myOptions = {
+          zoom: 8,
+          center: new google.maps.LatLng(-34.397, 150.644),
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        map = new google.maps.Map(document.getElementById('map_canvas'),
+            myOptions);	
+*/
+	var ce = new google.maps.LatLng(-34.397, 150.644);
+    map = new google.maps.Map( document.getElementById( 'map_canvas' ), {
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            center: ce,
+            //center: pi0,
+            zoom: 8,
+			scrollwheel: false
+        });
 
-		});
-		
-	});
+    });
 
 	</script>
 {% endblock %}
@@ -36,15 +47,8 @@
 
 {% block main %}
 
+<div style="margin: 0; padding: 0; width: 400px; height: 400px;%;"id="map_canvas" ></div>
 
-
-
-<div class="statement">
-<input type="text" id="in" placeholder="now"></input>
-</div>
-<input type="text" id="in" placeholder="now"></input>
-<button id="run_test" class="btn">Go</button>
-<div id="out"></div>
 
 
 {% endblock %}

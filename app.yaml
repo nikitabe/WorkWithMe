@@ -7,6 +7,9 @@ handlers:
 - url: /stylesheets
   static_dir: stylesheets
 
+- url: /_ah/login_required
+  script: do_openid_login.py
+  
 - url: /JS
   static_dir: JS
 

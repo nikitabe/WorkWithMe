@@ -17,7 +17,7 @@ var CLEAR_ALL = 0x0,
 	
 function map_init_resources( div_id )
 {
-    var pi0 = new google.maps.LatLng(0, 0);
+    var pi0 = new google.maps.LatLng(40.727686, -73.985074);
     
     map = new google.maps.Map( document.getElementById( div_id ), {
             mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -49,6 +49,7 @@ function find_address_by_loc( loc, func )
 		already_working = false;
     	if (stat == google.maps.GeocoderStatus.OK) {
 			if( results [0] )
+				console.log( "find_address_by_loc" );
 				func( results[0].formatted_address );
 		}
     });	
@@ -63,25 +64,34 @@ function map_center_on_me( complete_func )
 		clear_my_loc();
 	    if (navigator &&
 	            (ng = navigator.geolocation) &&
-	            ng.getCurrentPosition) {
+	            ng.getCurrentPosition ) {
 		   already_working = true;
-	       ng.getCurrentPosition( function( pos ){ 
-									already_working = false;
-									setStatus( "success", "Found your coordinates." );
-									var myLoc = new google.maps.LatLng( 
-																	pos.coords.latitude, 
-																	pos.coords.longitude );
-																	
-									
-									find_address_by_loc( myLoc, function( addr ){
-										add_marker_me( myLoc, addr, "", complete_func );
-									} );									
-									
-								   }, 
-								function( error ){
-									already_working = false;
-									center_on_me_not_found( error );
-								});
+	       ng.getCurrentPosition( 
+		       						function( pos ){ 
+										already_working = false;
+										setStatus( "success", "Found your coordinates.", "map_center_on_me" );
+										
+										console.log( "pos.coords.latitude: " + pos.coords.latitude + " pos.coords.longtitude " + pos.coords.longtitude );
+										
+										var myLoc = new google.maps.LatLng( 
+																		pos.coords.latitude, 
+																		pos.coords.longitude );								
+
+										console.log( "myLoc " + myLoc );
+										
+										find_address_by_loc( myLoc, function( addr ){
+											add_marker_me( myLoc, addr, "", complete_func );
+										} );									
+									}, 
+									function( error ){
+										already_working = false;
+										center_on_me_not_found( error );
+									 	if( typeof( complete_func ) != 'undefined' ){
+											console.log( 'map_center_on_me: running complete_func');
+											complete_func();
+										}			
+									}, 
+									{maximumAge:0} );
 		} else {
 			setStatus( "error", "<h3>Your browser does not support geolocation.  <button class='btn' name='findMeBtn'' id='findMeBtn' value='Find Me'>Try Again!</button></h3>", "map_center_on_me" );
 	    }
@@ -124,23 +134,22 @@ function DrawCircle( loc, rad )
     });
 }
 
-function add_marker_me( loc, address, msg, compelte_func )
+function add_marker_me( loc, address, msg, complete_func )
 {
 	DrawCircle( loc, 100 );
 	add_place_marker( loc, "", address, "", msg, 0, true );
 
+	console.log( "add_marker_me - loc:" + loc );
     map.panTo( loc );
     map.setZoom( default_zoom );
 
 	// Need to call listener because that is when the bounds actually change
-	listener_handle = google.maps.event.addListenerOnce(map, 'bounds_changed', function() {
-	 	if( typeof( complete_func ) != 'undefined' ){
-			console.log( 'add_marker_me: running complete_func');
-			complete_func();
-			listener_handle = 0;
-			//google.maps.event.removeListener(listener_handle);
-		}			
-	});	
+	//listener_handle = google.maps.event.addListenerOnce(map, 'bounds_changed', function() {
+	//});	
+ 	if( typeof( complete_func ) != 'undefined' ){
+		console.log( 'add_marker_me: running complete_func');
+		complete_func();
+	}			
 }
 
 function add_place_marker( loc, name, address, type, comment,  num_users, i_am_here )
@@ -238,6 +247,7 @@ function clear_place_markers( type )
 function map_find_places( sTxt, adjust_map, func_success, func_none_found ){
 	if( already_working ) return;
 	already_working = true;
+	console.log( "map_find_places" );
 
 	var map_bounds = map.getBounds();
     var placeApi = new google.maps.places.PlacesService(map);
@@ -250,9 +260,11 @@ function map_find_places( sTxt, adjust_map, func_success, func_none_found ){
 			already_working = false;
 			if( google.maps.places.PlacesServiceStatus.OK && r.length > 0 ){
 				// We found places!  Let's pass them for processing.
+				console.log( "map_find_places: SUCCESS" );
 				func_success( r, s, false );  // If we found places constrained to these bounds, no need to adjust
 			} 
 			else{
+				console.log( "map_find_places: FAIL. Trying again with larger radius." );
 				already_working = true;
 				// Second iteration attempt
 			    var searchRequest = {
@@ -264,10 +276,12 @@ function map_find_places( sTxt, adjust_map, func_success, func_none_found ){
 					already_working = false;
 					if( google.maps.places.PlacesServiceStatus.OK && r.length > 0 ){
 						// We found places!  Let's pass them for processing.
+						console.log( "map_find_places: SUCCESS." );
 						func_success( r, s, adjust_map );
 					} 
 					else{
 						// We didn't find anything.  Let's look elsewhere
+						console.log( "map_find_places: FAIL." );
 						func_none_found( adjust_map );
 					}
 				} );

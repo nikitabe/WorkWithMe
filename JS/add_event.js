@@ -19,6 +19,38 @@ function test(){
 	$( "#loc_geopt_lng" ).val( "71.2345" );
 }
 
+// If a person enters 1 or 130 or 1:30, gets you to the next reasonable time
+// Returns undefined if unable to instatiate time based on str
+// This is probably back-asswards clumsy
+function adjust_time_forward( str )
+{
+  if( str.length > 0 ){
+    myregexp    = /^([1-2]?[0-9]):?([0-9][0-9])?\s?(am|pm)?$/i;
+    var m       = myregexp.exec( str );
+    if( m ){
+      var hours   = parseInt( m[1] );
+      var minutes = parseInt( m[2] );
+      var ampm    = m[3];
+
+      if( minutes == undefined ) minutes = 0;
+
+      if( ampm == undefined || ampm.length == 0 ){
+          var d_n = Date.now();
+          var d_in = Date.today();
+          d_in.set( { hour:hours, minute:minutes });
+          while( d_in.compareTo( d_n ) < 0 ){
+            console.log( '-' + d_in.toString() );
+            d_in = d_in.add(12).hours();
+            console.log( '-' + d_in.toString() );
+          }
+          return d_in;
+      }
+    }
+  }
+  return undefined;
+  
+}
+
 function do_submit(){
 	hide_errors( function(){
 		var has_error = false;
@@ -39,9 +71,18 @@ function do_submit(){
 		}
 	
 		if( has_error ) return false;
+
+    // If end string is a numeric and larger than current time
+    // and doesn't have am or pm, append am or pm. 
+
+    var s_e = $( "#when_end" ).val();
+    d_e = adjust_time_forward( s_e );
+    if( d_e == undefined ){
+      d_e = Date.parse( s_e );
+    }
+
 	
 		d_s = Date.parse( $( "#when_start" ).val() );
-		d_e = Date.parse( $( "#when_end" ).val() );
 	
 		w_e = "";
 		try{

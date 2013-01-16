@@ -12,6 +12,8 @@ from datetime import datetime
 from datetime import timedelta
 from dateutil import parser
 from datetime import tzinfo
+import urllib
+
 
 from models import tz 
 from google.appengine.ext.webapp.util import run_wsgi_app
@@ -20,6 +22,14 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 from google.appengine.api import mail
 
+providers = {
+    'Google'   : 'https://www.google.com/accounts/o8/id',
+    'Yahoo'    : 'yahoo.com',
+    'MySpace'  : 'myspace.com',
+    'AOL'      : 'aol.com',
+    'MyOpenID' : 'myopenid.com'
+    # 
+ }
 
 class MyPage( webapp.RequestHandler ):
 	def FirstInit(self):
@@ -44,6 +54,10 @@ class MyPage( webapp.RequestHandler ):
 				"user":user
 			})
 		else:
+
+			#for name, uri in providers.items():
+			#            greeting += ('[<a href="%s">%s</a>]' % (
+			#                users.create_login_url(federated_identity=uri), name))			
 			greeting = "<li><a href='%s'>Log In</a></li>" % users.create_login_url( self.request.uri )
 			template_vars.update( {
 				"login_url":users.create_login_url( self.request.uri )
@@ -173,7 +187,6 @@ class Add_event( MyPage ):
 			temp_place.delete()
 	def post( self ):
 		n = self.request.get('who_name')
-		logging.info( len( n ) )
 		if len( n ) == 0:
 			self.response.out.write( 'Please enter your name' )
 			return
@@ -218,11 +231,16 @@ class Add_event( MyPage ):
 		event.where_addr    = self.request.get('where_addr')
 		event.where_detail  = self.request.get('where_detail')
 
-
+		logging.info( "Computing Geoboxes for the Event")
 		event.init_geoboxes()
+		logging.info( "OK")
+		logging.info( "Depositing Event into DB")
 		event.put()
-		
+		logging.info( "OK")
+
+		logging.info( "Sending OK Response")		
 		self.response.out.write( 'OK' )
+		logging.info( "OK")		
         
         # Add the information that was submitted	
         
@@ -384,19 +402,22 @@ class UserHandler( MyPage ):
 					event.put()
 		self.redirect( "/user/" + username )
 
-class LocationHandler( MyPage ):
+class PlaceHandler( MyPage ):
 	def get( self, lat, lon, place_name ):
+		#place_name = place_name.decode()
+		place_name = urllib.unquote_plus( place_name )
 		events = []
 		
-		place = models.Place.all().filter( "lat =", float(lat) ).filter( "lon =", float(lon)).get()
+		place = models.get_place( float( lat ), float( lon ), place_name )
+		#place = models.Place.all().filter( "lat =", float(lat) ).filter( "lon =", float(lon)).get()
 		if place:
-			logging.info( "LocationHandler: found a place: " + place.place_name)
+			logging.info( "PlaceHandler: found a place: " + place.place_name)
 			# Get all events from this location
 			q = models.Event.all()
 			events = q.filter( "place =", place ).filter( "when_end >=", datetime.now( tz ) ).fetch(100)
 		
 		template_values = { "events": events, "place":place } 
-		logging.info( "LocationHandler: Found so many: %s" % len( events ) )
+		logging.info( "PlaceHandler: Found so many: %s" % len( events ) )
 			
 		self.AddUserInfo( template_values )
 		path = os.path.join( os.path.dirname( __file__ ), 'templates/place.htm')
@@ -480,8 +501,8 @@ def main():
 									  ('/home', Home ),
 									  ('/get_items', GetItems ),
 									  ('/profile', Profile ),
-									  ('/place/(.*)/(.*)/(.*)', LocationHandler ),
-									  ('/place/(.*)/(.*)', LocationHandler ),
+									  ('/place/(.*)/(.*)/(.*)', PlaceHandler ),
+									  ('/place/(.*)/(.*)', PlaceHandler ),
 									  ('/user/(.*)/(.*)', UserHandler),
 									  ('/user/(.*)', UserHandler),
 									  ('/test', TestHandler ),

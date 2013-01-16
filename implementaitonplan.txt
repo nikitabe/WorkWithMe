@@ -1,8 +1,0 @@
-Plan:
-
-
-change the z-order for my location to always be under
-
-
-Once with internet:
-add_event.js - verify forwarding

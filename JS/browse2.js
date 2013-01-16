@@ -1,7 +1,20 @@
 
 $(function () {
 	map_init_resources( 'map_canvas');
-	map_center_on_me();
+	map_center_on_me( function(){
+		onDragAround( false );			
+
+		// Need to call listener because that is when the bounds actually change
+		// Not using bounds_changed because http://stackoverflow.com/questions/4338490/google-map-event-bounds-changed-triggered-multiple-times-when-dragging
+		google.maps.event.addListener(map, 'dragend', function(){ onDragAround(true); } );
+		google.maps.event.addListener(map, 'zoom_changed', function(){
+															if( !already_working){
+																already_working = true;
+																setTimeout("onDragAround(true)", 500);
+															}
+														} );
+
+	});
 
 	$("#nav_browse").addClass( "active" );
 	
@@ -16,22 +29,14 @@ $(function () {
 		}
 	});
 		
-	// Need to call listener because that is when the bounds actually change
-	// Not using bounds_changed because http://stackoverflow.com/questions/4338490/google-map-event-bounds-changed-triggered-multiple-times-when-dragging
-	google.maps.event.addListener(map, 'dragend', onDragAround );
-	google.maps.event.addListener(map, 'zoom_changed', function(){
-														if( !already_working){
-															already_working = true;
-															setTimeout("onDragAround()", 500);
-														}
-													} );
+	
 
 });
 
-function onDragAround()
+function onDragAround( update_status )
 {
 	console.log( "onDragAround");
-	find_users_on_map();
+	find_users_on_map( update_status );
 	if( $("#where").val().length > 0 )
 		perform_search( false );
 }
@@ -70,6 +75,7 @@ function find_via_address( adjust_map )
 
 function process_places_result( result_list, s, adjust_map )
 {
+	console.log( "process_places_result" );
 	var bounds = map.getBounds();
 	var place_id = "";
 	// Cycle through all results and add them to the map as appropriate
@@ -111,7 +117,8 @@ function process_places_result( result_list, s, adjust_map )
 
 function process_address_result( result_list, s, adjust_map )
 {
-    var dBounds = new google.maps.LatLngBounds();
+   console.log( "process_address_result" );
+   var dBounds = new google.maps.LatLngBounds();
 	var place_id = "";
 	for( j in result_list ){
 		var r = result_list[j];
@@ -143,7 +150,7 @@ function process_address_result( result_list, s, adjust_map )
 			map.setZoom( default_zoom );
 	}
 	
-	find_users_on_map();
+	find_users_on_map( true );
 
 }
 
@@ -158,25 +165,16 @@ function add_event( id, event_html )
 	$( "#" + id ).slideDown( 'slow' );
 }
 
-
-function find_users_on_map()
-{
-	already_working = false;
-	console.log( "aw = " + already_working );
-	
-	//clear_place_markers( CLEAR_WITH_USERS );
-	
-	
-	$( "#events_table" ).html( "<tr><td>Loading...</td></tr>" );
-	console.log( "find_users_on_map: looking for items around");
-	setStatus( "working", "Working...", "findItems", function(){
-	
+function perform_user_search(update_status)
+{	
 	var show_history = "";
 	if( $("#show_history").val() ){
 		show_history = "&show_history=1";
 	}
+
 	var bounds = map.getBounds();
-	
+//	console.log( "got bounds: " + bounds );
+
 	already_working = true;
 	// Make the AJAX call to get the items within bounds
 	$.ajax( {
@@ -213,10 +211,23 @@ function find_users_on_map()
 				adjust_dates();
 				already_working = false;
 				console.log( "setting to false");
-				setStatus( "success", "Looking for people in the area completed.", "findItems" );
+				if( update_status ) setStatus( "success", "Looking for people in the area completed.", "findItems" );
 			} 
 		});
-	} );
+}
+
+function find_users_on_map( update_status )
+{
+	already_working = false;
+	console.log( "aw = " + already_working );
+	
+	//clear_place_markers( CLEAR_WITH_USERS );
+	
+	
+	$( "#events_table" ).html( "<tr><td>Loading...</td></tr>" );
+	console.log( "find_users_on_map: looking for items around");
+	if( update_status ) setStatus( "working", "Working...", "findItems", function(){ perform_user_search(update_status); } );
+	else perform_user_search(update_status);
 
 	return true;
 }
